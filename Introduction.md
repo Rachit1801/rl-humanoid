@@ -1,16 +1,17 @@
-
+# Introduction
 
 ### What is Humanoid Robot?
 
 humanoid robots are characterized by their [anthropomorphic design](https://en.wikipedia.org/wiki/Anthropomorphism "Anthropomorphism").
 
 - torso
-
+  
 - head
-
+  
 - two arms
-
+  
 - two legs
+  
 
 ---
 
@@ -20,11 +21,12 @@ humanoid robots are characterized by their [anthropomorphic design](https://en.
 
 **Types:**
 
-- **Electric**  - Small, less powerful. Hence it is common to use multiple electric actuators for a single joint in a humanoid robot.
-
-- **Hydraulic**  - Higher power, bulky in size. One solution to counter the size issue is [electro-hydrostatic actuators](https://en.wikipedia.org/wiki/Electro-hydraulic_actuator "Electro-hydraulic actuator")
-
-- **Pneumatic**  - Gas Based. As they inflate, they expand along the axis, and as they deflate, they contract.
+- **Electric** - Small, less powerful. Hence it is common to use multiple electric actuators for a single joint in a humanoid robot.
+  
+- **Hydraulic** - Higher power, bulky in size. One solution to counter the size issue is [electro-hydrostatic actuators](https://en.wikipedia.org/wiki/Electro-hydraulic_actuator "Electro-hydraulic actuator")
+  
+- **Pneumatic** - Gas Based. As they inflate, they expand along the axis, and as they deflate, they contract.
+  
 
 ---
 
@@ -152,12 +154,55 @@ If the ZMP moves outside the support area, the robot starts to tip or fall.
 
 ---
 
+# Latest and Important Humanoid Robots
+
+### Moya
+
+Company : DroidUp (China)
+
+World’s first fully biomimetic embodied intelligent robot.
+
+Designed to move, react, and exist in a way that feels human physically and socially. It reproduces human micro-expressions and subtle timing.
+
+### G1
+
+Company : Unitree Robotics (China)
+
+A compact humanoid (127 cm, 35 kg) that completed a 130,000-step autonomous trek in extreme cold (-47.4°C). It uses a Bato satellite navigation system and runs on Unitree's Unifol LM model.
+
+### Themis Gen 2.5
+
+Company : Westwood Robotics
+
+A robot designed to manipulate objects *while* walking. It uses an AI-augmented humanoid operating system (AOS) that integrates perception, planning, and control. It features an object-centric vision action model (OC VAM) and upgraded hardware, including arms that can handle 5 kg payloads and new "Mountain Bear" actuators in the hips.
+
+### Atlas
+
+Company: Boston Dynamics / Hyundai (USA/South Korea)
+
+Most advanced mobility and athletic performance in a commercial humanoid.
+Fully electric with exceptional range of motion (high DoF, including 360° joint capabilities), strength, and whole-body control. Powered by AI (e.g., Google DeepMind partnership). Designed for industrial tasks
+
+### Other
+
+**Optimus**: Tesla (USA) ; Mass-market general-purpose humanoid.
+
+**Figure 03** : Figure AI (USA) ; general-purpose AI humanoid for homes and industry.
+
+**NEO** : 1X Technologies (USA/Norway) ; major consumer/home humanoid robot.
+
+**LG CLOiD** : Strong home task demonstration (laundry, dishes)
+
+---
+
 ## Refrences
 
 [Humanoid robot - Wikipedia](https://en.wikipedia.org/wiki/Humanoid_robot)
 
 [GitHub - YanjieZe/awesome-humanoid-robot-learning: A Paper List for Humanoid Robot Learning. · GitHub](https://github.com/YanjieZe/awesome-humanoid-robot-learning)
 
+[AI Robots Got Shockingly Human This Year (2026 Update) - YouTube](https://www.youtube.com/watch?v=GjokTDha_vs)
 
+https://interestingengineering.com/ai-robotics/9-humanoid-robots-at-ces-2026
 
-
+https://humanoidroboticstechnology.com/articles/top-12-humanoid-robots-of-2026/
