@@ -2,31 +2,41 @@
 
 ### What is Humanoid Robot?
 
-humanoid robots are characterized by their [anthropomorphic design](https://en.wikipedia.org/wiki/Anthropomorphism "Anthropomorphism").
+Humanoids are general-purpose, bipedal robots.
+
+Humanoid robots are characterized by their [anthropomorphic design](https://en.wikipedia.org/wiki/Anthropomorphism "Anthropomorphism").
 
 - torso
-  
+
 - head
-  
+
 - two arms
-  
+
 - two legs
-  
 
 ---
 
 ### Actuator
 
-[Actuators](https://en.wikipedia.org/wiki/Actuator "Actuator") are the motors responsible for motion in the robot.
+Actuators are the motors responsible for motion in the robot.
 
 **Types:**
 
-- **Electric** - Small, less powerful. Hence it is common to use multiple electric actuators for a single joint in a humanoid robot.
-  
-- **Hydraulic** - Higher power, bulky in size. One solution to counter the size issue is [electro-hydrostatic actuators](https://en.wikipedia.org/wiki/Electro-hydraulic_actuator "Electro-hydraulic actuator")
-  
-- **Pneumatic** - Gas Based. As they inflate, they expand along the axis, and as they deflate, they contract.
-  
+- **Electric**  - Small, less powerful. Hence it is common to use multiple electric actuators for a single joint in a humanoid robot.
+
+- **Hydraulic**  - Higher power, bulky in size. One solution to counter the size issue is [electro-hydrostatic actuators](https://en.wikipedia.org/wiki/Electro-hydraulic_actuator "Electro-hydraulic actuator")
+
+- **Pneumatic**  - Gas Based. As they inflate, they expand along the axis, and as they deflate, they contract.
+
+---
+
+### Training
+
+Reinforcement learning and imitation learning are used to train robots to perform tasks like grasping objects or navigating obstacles
+
+**Imitation Learning:** Robots can acquire new skills by replicating movements demonstrated by humans.
+
+**Reinforcement Learning:** An algorithm uses a mathematical equation to reward robots for correct actions and penalize them for incorrect actions through trial and error.
 
 ---
 
@@ -191,13 +201,35 @@ Fully electric with exceptional range of motion (high DoF, including 360° joint
 
 **NEO** : 1X Technologies (USA/Norway) ; major consumer/home humanoid robot.
 
-**LG CLOiD** : Strong home task demonstration (laundry, dishes)
+**LG CLOiD** : Strong home task demonstration (laundry, dishes) 
+
+--- 
+
+# Repos
+
+- [Reinforcement Learning for Humanoid Robot](https://github.com/roboterax/humanoid-gym) : reinforcement learning (RL) framework based on Nvidia Isaac Gym, designed to train locomotion skills for humanoid robots, emphasizing zero-shot transfer from simulation to the real-world environment.
+
+- [ProtoMotions](https://github.com/NVlabs/ProtoMotions) : GPU-accelerated simulation and learning framework for training physically simulated digital humans and humanoid robots.
+
+- [Asimov](https://github.com/asimovinc/asimov-v0) : open-source bipedal robotic legs
+
+- [Training a humanoid robot for locomotion using Reinforcement Learning](https://github.com/rohanpsingh/LearningHumanoidWalking)
+
+- [Reinforcement learning training code for AgiBot X1](https://github.com/AgibotTech/agibot_x1_train)
+
+- [Simulation verification and physical deployment of robot reinforcement learning ](https://github.com/fan-ziqi/rl_sar)
+
+- [OpenRLHF](https://github.com/OpenRLHF/OpenRLHF) 
+
+- [Safe RLHF](https://github.com/PKU-Alignment/safe-rlhf) : Constrained Value Alignment via Safe Reinforcement Learning from Human Feedback
 
 ---
 
-## Refrences
+# Refrences
 
 [Humanoid robot - Wikipedia](https://en.wikipedia.org/wiki/Humanoid_robot)
+
+[What are Humanoid Robots and Why do They Matter? | NVIDIA Glossary](https://www.nvidia.com/en-in/glossary/humanoid-robot/)
 
 [GitHub - YanjieZe/awesome-humanoid-robot-learning: A Paper List for Humanoid Robot Learning. · GitHub](https://github.com/YanjieZe/awesome-humanoid-robot-learning)
 
@@ -206,3 +238,7 @@ Fully electric with exceptional range of motion (high DoF, including 360° joint
 https://interestingengineering.com/ai-robotics/9-humanoid-robots-at-ces-2026
 
 https://humanoidroboticstechnology.com/articles/top-12-humanoid-robots-of-2026/
+
+[reinforcement-learning-from-human-feedback](https://github.com/topics/reinforcement-learning-from-human-feedback)
+
+[humanoid-robots : GitHub](https://github.com/topics/humanoid-robots)
