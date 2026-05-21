@@ -1,2 +1,2 @@
 # rl-humanoid
-Reinforcement learning research for humanoid robot
+Research in Reinforcement learning for humanoid robot under Prakash K Uttam, DRDO
