@@ -13,15 +13,11 @@ The controller tries to keep the ZMP (Zero Moment Point) inside the support poly
 | Stable and predictable | Flexible and adaptive |
 | Easier safety constraints | Harder to guarantee safety |
 
----
-
 ### What is WBC?
 
 Whole-Body Control (WBC) controls the entire humanoid robot body simultaneously instead of controlling each joint independently.
 
 WBC coordinates ams, legs, torso, head, balance all together in one unified framework.
-
----
 
 ### What is Imitation Learning?
 
@@ -49,8 +45,6 @@ Note : I have only included projects which used Reinforcement learning as it is 
 - Simulation : IsaacLab, Isaac Gym
 - Programming Stack : Python, C++
 
----
-
 ### Cassie
 
 - Organization : Agility Robotics
@@ -64,8 +58,6 @@ Note : I have only included projects which used Reinforcement learning as it is 
 - Simulation : MuJoCo, Gazebo, Simulink, PyBullet
 - Programming Stack : Python
 
----
-
 ### HRP Series (HRP-4 / JVRC1)
 
 - Organization : AIST / Kawada Industries
@@ -77,8 +69,6 @@ Note : I have only included projects which used Reinforcement learning as it is 
 - Code : https://github.com/stephane-caron/lipm_walking_controller
 - Simulation : Choreonoid, MuJoCo
 - Programming Stack : C++ (mc_rtc)
-
----
 
 ### MEVITA
 
