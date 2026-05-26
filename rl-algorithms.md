@@ -38,6 +38,7 @@ Note : I have only included projects which used Reinforcement learning as it is 
 - Organization : UC Berkeley Hybrid Robotics Lab
 - Description : Low-cost open-source 3D-printed humanoid robot designed for reinforcement learning and sim-to-real research.
 - Main Research Focus : Reinforcement learning locomotion and zero-shot sim-to-real transfer
+- RL Algorithm: Proximal Policy Optimization (PPO) (utilizing LeggedGym environments for parallelized simulation).
 - Paper :
   - https://arxiv.org/abs/2504.17249
   - https://www.roboticsproceedings.org/rss21/p062.pdf
@@ -50,6 +51,7 @@ Note : I have only included projects which used Reinforcement learning as it is 
 - Organization : Agility Robotics
 - Description : Highly dynamic biped robot with bio-inspired legs widely used in academic RL locomotion research.
 - Main Research Focus : Reinforcement learning for robust locomotion
+- RL Algorithm: Proximal Policy Optimization (PPO) (some early work also explored Soft Actor-Critic (SAC) and Deep Deterministic Policy Gradient (DDPG)).
 - Paper :
   - https://arxiv.org/abs/2103.14295
   - https://proceedings.mlr.press/v100/xie20a.html
@@ -58,23 +60,12 @@ Note : I have only included projects which used Reinforcement learning as it is 
 - Simulation : MuJoCo, Gazebo, Simulink, PyBullet
 - Programming Stack : Python
 
-### HRP Series (HRP-4 / JVRC1)
-
-- Organization : AIST / Kawada Industries
-- Description : Japanese humanoid robotics platform focused on multi-contact stability and humanoid locomotion control.
-- Main Research Focus : MPC, multi-contact locomotion, Whole-Body Control
-- Paper :
-  - https://arxiv.org/abs/1809.07073
-  - https://hal.science/hal-01875387v4/file/stair-climbing.pdf
-- Code : https://github.com/stephane-caron/lipm_walking_controller
-- Simulation : Choreonoid, MuJoCo
-- Programming Stack : C++ (mc_rtc)
-
 ### MEVITA
 
 - Organization : University of Tokyo / Kento Kawaharazuka Research Group
 - Description : Open-source bipedal humanoid robot built using e-commerce components and sheet metal welding for low-cost robust locomotion research.
 - Main Research Focus : Reinforcement learning locomotion and sim-to-real transfer
+- RL Algorithm: Proximal Policy Optimization (PPO) (specifically utilizing the rsl_rl library and LeggedGym).
 - Paper :
   - https://arxiv.org/html/2508.17684v1
   - https://www.semanticscholar.org/paper/MEVITA%3A-Open-Source-Bipedal-Robot-Assembled-From-Kawaharazuka-Sawaguchi/6dfdb11eaca5e0cd5d94a12475a7b3aa55b8e76b
