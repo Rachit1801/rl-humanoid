@@ -84,3 +84,14 @@ High-fidelity physics simulator widely used for humanoid robotics and reinforcem
 Code : [GitHub - google-deepmind/mujoco: Multi-Joint dynamics with Contact. A general purpose physics simulator. · GitHub](https://github.com/google-deepmind/mujoco)
 
 Programming Stack : C++, Python
+
+---
+
+## Reinforcement Learning Workflow for Humanoid Robots
+
+1. **Policy Training** : Neural network learns behaviors from reward signals.
+2. **Simulation (MuJoCo)** : Physics-based testing of locomotion policies.
+3. **Transfer to Hardware** : Zero-shot sim-to-real deployment.
+4. **Hardware Testing** : Validating real-world performance on the robot.
+
+![RL workflow for humanoid robots](https://copilot.microsoft.com/th/id/BCO.5b70b472-d68f-4e6c-8e5c-f371e00cf63d.png)
