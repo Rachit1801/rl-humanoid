@@ -5,10 +5,9 @@ xml = """
 <mujoco>
     <worldbody>
         <geom type="plane" size="5 5 0.1"/>
-
-        <body name="box" pos="0 0 1">
+        <body pos="0 0 1">
             <freejoint/>
-            <geom type="box" size="0.1 0.1 0.1"/>
+            <geom type="box" size="0.5 0.5 0.5" rgba="1 0 0 1"/>
         </body>
     </worldbody>
 </mujoco>
