@@ -43,6 +43,9 @@ World
     <worldbody>
 
     </worldbody>
+    <actuator>
+
+    </actuator>
 </mujoco>
 ```
 
@@ -175,3 +178,55 @@ Example: `fromto="0 0 0 1 0 0"` capsule goes from x=0 to x=1
 Child body has `pos="0 0 0.5"`, means child body starts at end of parent. This creates connected links. 
 
 The child body position is relative to parent. NOT world coordinates.
+
+---
+
+### Actuators
+
+apply forces to joints
+
+Actuators are written OUTSIDE `worldbody`
+
+#### Types
+
+| Type     | Purpose             |
+| -------- | ------------------- |
+| motor    | direct torque/force |
+| position | PD position control |
+| velocity | velocity control    |
+
+#### Example
+
+```xml
+<actuator>
+        <motor joint="cart_slider" ctrlrange="-1 1" gear="100"/>
+</actuator>
+```
+
+It is important to give joint names because actuators need to know which joint to control 
+
+#### Terms
+
+- <actuator> : Contains motors/controllers.
+
+- <motor> : apply force to this joint
+
+- `ctrlrange="-1 1"` : Allowed control input. RL actions become: -1 ≤ action ≤ 1. 
+  -1 = push left, +1 = push right.
+
+- `gear="100"`: Motor strength multiplier/torque multiplier.
+
+#### Control
+
+PPO outputs action = 0.7 then MuJoCo actuator converts this into force, torque and motion. The agent DOES NOT know physics, joints and motors. It only observes, does action and gives reward
+
+Each actuator receives a value `data.ctrl[i]` this is how Python controls robot.
+
+Example : cart moves automatically
+
+```python
+while viewer.is_running():
+    data.ctrl[0] = 0.5
+    mujoco.mj_step(model, data)
+    viewer.sync()
+```

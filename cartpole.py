@@ -11,7 +11,7 @@ xml = """
         <!-- Cart -->
         <body pos="0 0 0.1">
             <!-- Cart moves left/right -->
-            <joint type="slide" axis="1 0 0"/>
+            <joint name="cart_slider" type="slide" axis="1 0 0"/>
             <!-- Cart body -->
             <geom type="box" size="0.2 0.15 0.1" rgba="1 0 0 1"/>
             <!-- Pole -->
@@ -23,6 +23,9 @@ xml = """
             </body>
         </body>
     </worldbody>
+    <actuator>
+        <motor joint="cart_slider" ctrlrange="-1 1" gear="1000"/>
+    </actuator>
 </mujoco>
 """
 
