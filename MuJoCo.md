@@ -43,9 +43,12 @@ World
     <worldbody>
 
     </worldbody>
-    <actuator>
+    <actuator>
 
     </actuator>
+    <sensor>
+        
+    </sensor>
 </mujoco>
 ```
 
@@ -230,3 +233,63 @@ while viewer.is_running():
     mujoco.mj_step(model, data)
     viewer.sync()
 ```
+
+### Sensors
+
+Sensors are defined outside `worldbody`.
+
+#### Types
+
+| Sensor        | Measures         |
+| ------------- | ---------------- |
+| jointpos      | joint angle      |
+| jointvel      | joint speed      |
+| accelerometer | acceleration     |
+| gyro          | angular velocity |
+| force         | forces           |
+| touch         | contacts         |
+
+#### Example
+
+Creates sensors for pole angle and pole angular velocity
+
+```xml
+<sensor>
+    <jointpos joint="pole_hinge"/>
+    <jointvel joint="pole_hinge"/>
+</sensor>
+```
+
+#### Reading Sensor Data
+
+```python
+print(data.sensordata)
+```
+
+## Observations
+
+An RL agent cannot see the world directly. It only receives numbers describing the state. These numbers are called observations or state.
+
+#### qpos
+
+Joint Positions 
+Contains joint angles, positions and orientations
+
+Example: `qpos = [0.5, 0.2]` Means cart at x=0.5 and pole angle=0.2 rad
+
+#### qvel
+
+Joint Velocities
+
+Example: `qvel = [1.2, -0.7]` Means cart moving right and pole rotating left
+
+#### Example
+
+```python
+print(data.qpos)
+print(data.qvel)
+```
+
+Every joint adds position and velocity to the observation space.
+
+Gymnasium usually combines these into `obs = np.concatenate([ qpos, qvel, sensors` . This becomes input to PPO.
