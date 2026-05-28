@@ -1,3 +1,4 @@
+from time import sleep
 import mujoco
 import mujoco.viewer
 import matplotlib.pyplot as plt
@@ -7,26 +8,24 @@ xml = """
 <mujoco>
     <worldbody>
         <!-- Ground -->
-        <geom type="plane" size="5 5 0.1"/>
-        <!-- Rail (For Refrence)-->
-        <geom type="box" pos="0 0 0" size="2 0.05 0.05" rgba="0.3 0.3 0.3 1"/>
+        <geom type="plane" pos="0 0 -0.01" size="5 5 0.1"/>
         <!-- Cart -->
         <body pos="0 0 0.1">
             <!-- Cart moves left/right -->
             <joint name="cart_slider" type="slide" axis="1 0 0"/>
             <!-- Cart body -->
-            <geom type="box" size="0.2 0.15 0.1" rgba="1 0 0 1"/>
+            <geom type="box" size="0.2 0.15 0.1" mass="0.1" rgba="1 0 0 1"/>
             <!-- Pole -->
             <body pos="0 0 0.1">
                 <!-- Pole rotates -->
                 <joint name="pole_hinge" type="hinge" axis="0 1 0"/>
                 <!-- Pole geom -->
-                <geom type="capsule" fromto="0 0 0 0 0 1" size="0.05" rgba="0 1 0 1"/>
+                <geom type="capsule" fromto="0 0 0 0 0 1" size="0.05" mass="1" rgba="0 1 0 1"/>
             </body>
         </body>
     </worldbody>
     <actuator>
-        <motor joint="cart_slider" ctrlrange="-1 1" gear="1000"/>
+        <motor joint="cart_slider" ctrlrange="-1 1" gear="10"/>
     </actuator>
     <sensor>
         <jointpos joint="pole_hinge"/>
@@ -62,4 +61,5 @@ while viewer.is_running():
     #     plt.pause(0.001)
     # t += 1
     # Press Cltr + / to comment/uncomment 
+    sleep(0.001)
     viewer.sync()
