@@ -1,0 +1,18 @@
+<mujoco>
+    <option gravity="0 0 -9.81"/>
+    <worldbody>
+        <!-- <geom type="plane" pos="0 0 1" size="5 5 0.1"/> -->
+        <body pos="0 0 1">
+            <body name="pendulum" pos="0 0 0">
+                <geom type="capsule" fromto="0 0 0 0 0 -1" size="0.005" mass="0" rgba="1 1 1 1"/>
+                <joint name="pivot" type="hinge" axis="0 1 0" pos="0 0 0"/>
+                <body pos="0 0 -1">
+                    <geom type="sphere" size="0.05" rgba="1 0 0 1"/>
+                </body>
+            </body>
+        </body>
+    </worldbody>
+    <actuator>
+        <motor joint="pivot" ctrlrange="-1 1" gear="10"/>
+    </actuator>
+</mujoco>

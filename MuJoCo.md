@@ -47,7 +47,7 @@ World
 
     </actuator>
     <sensor>
-        
+
     </sensor>
 </mujoco>
 ```
@@ -210,9 +210,9 @@ It is important to give joint names because actuators need to know which joint t
 
 #### Terms
 
-- <actuator> : Contains motors/controllers.
+- `<actuator>` : Contains motors/controllers.
 
-- <motor> : apply force to this joint
+- `<motor>` : apply force to this joint
 
 - `ctrlrange="-1 1"` : Allowed control input. RL actions become: -1 ≤ action ≤ 1. 
   -1 = push left, +1 = push right.
