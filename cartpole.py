@@ -1,65 +1,48 @@
 from time import sleep
-import mujoco
-import mujoco.viewer
-import matplotlib.pyplot as plt
-import time
+import gymnasium as gym
+from gymnasium.envs.mujoco import MujocoEnv #MujocoEnv(wrapper) internally handles the MuJoCo import
+from gymnasium.spaces import Box
+import numpy as np
 
-xml = """
-<mujoco>
-    <worldbody>
-        <!-- Ground -->
-        <geom type="plane" pos="0 0 -0.01" size="5 5 0.1"/>
-        <!-- Cart -->
-        <body pos="0 0 0.1">
-            <!-- Cart moves left/right -->
-            <joint name="cart_slider" type="slide" axis="1 0 0"/>
-            <!-- Cart body -->
-            <geom type="box" size="0.2 0.15 0.1" mass="0.1" rgba="1 0 0 1"/>
-            <!-- Pole -->
-            <body pos="0 0 0.1">
-                <!-- Pole rotates -->
-                <joint name="pole_hinge" type="hinge" axis="0 1 0"/>
-                <!-- Pole geom -->
-                <geom type="capsule" fromto="0 0 0 0 0 1" size="0.05" mass="1" rgba="0 1 0 1"/>
-            </body>
-        </body>
-    </worldbody>
-    <actuator>
-        <motor joint="cart_slider" ctrlrange="-1 1" gear="10"/>
-    </actuator>
-    <sensor>
-        <jointpos joint="pole_hinge"/>
-        <jointvel joint="pole_hinge"/>
-    </sensor>
-</mujoco>
-"""
+class MyCartPoleEnv(MujocoEnv):
 
-model = mujoco.MjModel.from_xml_string(xml)
-data = mujoco.MjData(model)
+    def __init__(self):
 
-viewer = mujoco.viewer.launch_passive(model, data)
+        observation_space = Box(low=-np.inf, high=np.inf, shape=(4,), dtype=np.float64)
 
-#Plot
-plt.ion()
-fig, ax = plt.subplots()
-x_data = []
-y_data = []
-line, = ax.plot(x_data, y_data)
-t = 0
+        super().__init__(model_path="C:/Users/admin/Desktop/rl-humanoid/cartpole.xml", frame_skip=1, observation_space=observation_space, render_mode="human")
 
-while viewer.is_running():
-    mujoco.mj_step(model, data)
-    # plot_data = data.qpos[1]
-    # x_data.append(t)
-    # y_data.append(plot_data)
-    # line.set_xdata(x_data)
-    # line.set_ydata(y_data)
-    # ax.relim()
-    # ax.autoscale_view()
-    # if t % 100 == 0:
-    #     plt.draw()
-    #     plt.pause(0.001)
-    # t += 1
-    # Press Cltr + / to comment/uncomment 
-    sleep(0.001)
-    viewer.sync()
+    def _get_obs(self):
+
+        return np.concatenate([self.data.qpos, self.data.qvel])
+
+    def reset_model(self):
+
+        self.set_state(qpos=np.array([0.0, 0.05]), qvel=np.array([0.0, 0.0]))
+        return self._get_obs()
+
+    def step(self, action):
+
+        self.do_simulation(action, self.frame_skip)
+
+        obs = self._get_obs()
+        cart_pos = obs[0]
+        pole_angle = obs[1]
+        reward = 1.0
+        terminated = bool(abs(cart_pos) > 2.0 or abs(pole_angle) > 0.5)
+        truncated = False
+        info = {}
+        return (obs, reward, terminated, truncated, info)
+
+env = MyCartPoleEnv()
+obs, info = env.reset()
+for step in range(1000):
+    action = env.action_space.sample()  # Random action
+    obs, reward, terminated, truncated, info = env.step(action)
+    env.render()
+    print(f"Step: {step} Observation: {obs} Reward: {reward}")
+    sleep(0.02)
+    if terminated or truncated:
+        print("Episode ended. Resetting...\n")
+        obs, info = env.reset()
+env.close()
