@@ -3,14 +3,20 @@ import gymnasium as gym
 from gymnasium.envs.mujoco import MujocoEnv #MujocoEnv(wrapper) internally handles the MuJoCo import
 from gymnasium.spaces import Box
 import numpy as np
+from stable_baselines3 import PPO
+from stable_baselines3.common.env_checker import check_env
 
 class MyCartPoleEnv(MujocoEnv):
 
-    def __init__(self):
+    metadata = {"render_modes": ["human", "rgb_array"], "render_fps": 50}
+
+    def __init__(self, render_mode=None):
 
         observation_space = Box(low=-np.inf, high=np.inf, shape=(4,), dtype=np.float64)
 
-        super().__init__(model_path="C:/Users/admin/Desktop/rl-humanoid/cartpole.xml", frame_skip=1, observation_space=observation_space, render_mode="human")
+        super().__init__(model_path="C:/Users/admin/Desktop/rl-humanoid/cartpole.xml", frame_skip=1, observation_space=observation_space, render_mode=render_mode)
+
+        self.action_space = Box(low=-1.0, high=1.0, shape=(1,), dtype=np.float32)
 
     def _get_obs(self):
 
@@ -22,7 +28,7 @@ class MyCartPoleEnv(MujocoEnv):
         return self._get_obs()
 
     def step(self, action):
-
+        action = np.clip(action, -1.0, 1.0)
         self.do_simulation(action, self.frame_skip)
 
         obs = self._get_obs()
@@ -34,15 +40,30 @@ class MyCartPoleEnv(MujocoEnv):
         info = {}
         return (obs, reward, terminated, truncated, info)
 
-env = MyCartPoleEnv()
+train_env = MyCartPoleEnv(render_mode=None)
+check_env(train_env)                          # Check Env (one time only)
+
+model = PPO(policy="MlpPolicy", env=train_env, learning_rate=3e-4, n_steps=2048, batch_size=64, n_epochs=10, gamma=0.99, verbose=1)
+
+# Load and continue training
+# model = PPO.load("ppo_cartpole", env=train_env)
+# model.learn(total_timesteps=50_000, reset_num_timesteps=False)
+# model.save("ppo_cartpole_v2")
+
+print("\nStarting PPO training...")
+model.learn(total_timesteps=100_000)
+model.save("ppo_cartpole")
+train_env.close()
+
+env = MyCartPoleEnv(render_mode="human")
 obs, info = env.reset()
 for step in range(1000):
-    action = env.action_space.sample()  # Random action
+    action, _ = model.predict(obs, deterministic=True)
     obs, reward, terminated, truncated, info = env.step(action)
     env.render()
     print(f"Step: {step} Observation: {obs} Reward: {reward}")
     sleep(0.02)
     if terminated or truncated:
-        print("Episode ended. Resetting...\n")
+        print("Episode ended at step {step}. Resetting...\n")
         obs, info = env.reset()
 env.close()

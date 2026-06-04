@@ -3,7 +3,7 @@ import mujoco
 import mujoco.viewer
 #import matplotlib.pyplot as plt
 
-model = mujoco.MjModel.from_xml_path("pendulum.xml")
+model = mujoco.MjModel.from_xml_path("cartpole.xml")
 data = mujoco.MjData(model)
 
 viewer = mujoco.viewer.launch_passive(model, data)

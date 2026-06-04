@@ -1,4 +1,5 @@
 <mujoco>
+    <option timestep="0.02"/>
     <worldbody>
         <!-- Virtual Track -->
         <geom name="track" type="box" pos="0 0 0.045" size="3.0 0.12 0.045" rgba="0 0 0 1" contype="0" conaffinity="0"/>
