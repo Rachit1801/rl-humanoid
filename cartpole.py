@@ -12,9 +12,9 @@ class MyCartPoleEnv(MujocoEnv):
 
     def __init__(self, render_mode=None):
 
-        observation_space = Box(low=-np.inf, high=np.inf, shape=(4,), dtype=np.float64)
+        observation_space = Box(low=-np.inf, high=np.inf, shape=(6,), dtype=np.float64)
 
-        super().__init__(model_path="C:/Users/admin/Desktop/rl-humanoid/cartpole.xml", frame_skip=1, observation_space=observation_space, render_mode=render_mode)
+        super().__init__(model_path="C:/Users/admin/Desktop/rl-humanoid/double_pendulum_cartpole.xml", frame_skip=1, observation_space=observation_space, render_mode=render_mode)
 
         self.action_space = Box(low=-1.0, high=1.0, shape=(1,), dtype=np.float32)
 
@@ -24,7 +24,7 @@ class MyCartPoleEnv(MujocoEnv):
 
     def reset_model(self):
 
-        self.set_state(qpos=np.array([0.0, 0.05]), qvel=np.array([0.0, 0.0]))
+        self.set_state(qpos=np.array([0.0, np.random.uniform(-0.05, 0.05), 0.0]), qvel=np.array([0.0, 0.0, 0.0]))
         return self._get_obs()
 
     def step(self, action):
@@ -42,8 +42,9 @@ class MyCartPoleEnv(MujocoEnv):
 
 train_env = MyCartPoleEnv(render_mode=None)
 check_env(train_env)                          # Check Env (one time only)
+print("Env Check SuccessFul")
 
-model = PPO(policy="MlpPolicy", env=train_env, learning_rate=3e-4, n_steps=2048, batch_size=64, n_epochs=10, gamma=0.99, verbose=1)
+model = PPO(policy="MlpPolicy", env=train_env, learning_rate=3e-4, n_steps=2048, batch_size=64, n_epochs=10, gamma=0.99, verbose=0)
 
 # Load and continue training
 # model = PPO.load("ppo_cartpole", env=train_env)
@@ -60,8 +61,10 @@ obs, info = env.reset()
 for step in range(1000):
     action, _ = model.predict(obs, deterministic=True)
     obs, reward, terminated, truncated, info = env.step(action)
+    # if step == 500:                                            # Test by giving jerk
+    #     env.data.qvel[0] += 0.7
     env.render()
-    print(f"Step: {step} Observation: {obs} Reward: {reward}")
+    # print(f"Step: {step} Observation: {obs} Reward: {reward}")
     sleep(0.02)
     if terminated or truncated:
         print("Episode ended at step {step}. Resetting...\n")

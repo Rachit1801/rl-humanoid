@@ -3,7 +3,7 @@ import mujoco
 import mujoco.viewer
 #import matplotlib.pyplot as plt
 
-model = mujoco.MjModel.from_xml_path("cartpole.xml")
+model = mujoco.MjModel.from_xml_path("double_pendulum_cartpole.xml")
 data = mujoco.MjData(model)
 
 viewer = mujoco.viewer.launch_passive(model, data)
@@ -30,5 +30,5 @@ while viewer.is_running():
     #     plt.pause(0.001)
     # t += 1
     # Press Cltr + / to comment/uncomment 
-    sleep(0.001)
+    sleep(0.05)
     viewer.sync()
