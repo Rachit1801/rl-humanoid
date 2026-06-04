@@ -24,7 +24,7 @@ class MyCartPoleEnv(MujocoEnv):
 
     def reset_model(self):
 
-        self.set_state(qpos=np.array([0.0, np.random.uniform(-0.05, 0.05), 0.0]), qvel=np.array([0.0, 0.0, 0.0]))
+        self.set_state(qpos=np.array([0.0, np.random.uniform(-0.05, 0.05), np.random.uniform(-0.05, 0.05)]), qvel=np.array([0.0, 0.0, 0.0]))
         return self._get_obs()
 
     def step(self, action):
@@ -34,8 +34,9 @@ class MyCartPoleEnv(MujocoEnv):
         obs = self._get_obs()
         cart_pos = obs[0]
         pole_angle = obs[1]
-        reward = 1.0
-        terminated = bool(abs(cart_pos) > 2.0 or abs(pole_angle) > 0.5)
+        pole_angle_2 = obs[2]
+        reward = 1.0 - 0.5 * pole_angle**2 - 0.5 * pole_angle_2**2 - 0.01 * cart_pos**2         #Used AI Help here
+        terminated = bool(abs(cart_pos) > 2.0 or abs(pole_angle) > 0.5 or abs(pole_angle_2) > 0.5)
         truncated = False
         info = {}
         return (obs, reward, terminated, truncated, info)
@@ -47,22 +48,22 @@ print("Env Check SuccessFul")
 model = PPO(policy="MlpPolicy", env=train_env, learning_rate=3e-4, n_steps=2048, batch_size=64, n_epochs=10, gamma=0.99, verbose=0)
 
 # Load and continue training
-# model = PPO.load("ppo_cartpole", env=train_env)
+model = PPO.load("ppo_cartpole", env=train_env)
 # model.learn(total_timesteps=50_000, reset_num_timesteps=False)
 # model.save("ppo_cartpole_v2")
 
-print("\nStarting PPO training...")
-model.learn(total_timesteps=100_000)
-model.save("ppo_cartpole")
-train_env.close()
+# print("\nStarting PPO training...")
+# model.learn(total_timesteps=500_000)
+# model.save("ppo_cartpole")
+# train_env.close()
 
 env = MyCartPoleEnv(render_mode="human")
 obs, info = env.reset()
 for step in range(1000):
     action, _ = model.predict(obs, deterministic=True)
     obs, reward, terminated, truncated, info = env.step(action)
-    # if step == 500:                                            # Test by giving jerk
-    #     env.data.qvel[0] += 0.7
+    if step == 500:                                            # Test by giving jerk
+        env.data.qvel[0] += 0.3
     env.render()
     # print(f"Step: {step} Observation: {obs} Reward: {reward}")
     sleep(0.02)

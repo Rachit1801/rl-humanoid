@@ -17,7 +17,7 @@
         </body>
     </worldbody>
     <actuator>
-        <motor joint="cart_slider" ctrlrange="-1 1" gear="100"/>
+        <motor joint="cart_slider" ctrlrange="-1 1" gear="30"/>
     </actuator>
     <sensor>
         <jointpos name="cart_pos" joint="cart_slider"/>
