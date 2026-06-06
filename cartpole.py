@@ -6,6 +6,8 @@ import numpy as np
 from stable_baselines3 import PPO
 from stable_baselines3.common.env_checker import check_env
 
+MODEL_PATH = "C:/Users/admin/Desktop/rl-humanoid/double_pendulum_cartpole.xml"
+
 class MyCartPoleEnv(MujocoEnv):
 
     metadata = {"render_modes": ["human", "rgb_array"], "render_fps": 50}
@@ -14,7 +16,7 @@ class MyCartPoleEnv(MujocoEnv):
 
         observation_space = Box(low=-np.inf, high=np.inf, shape=(6,), dtype=np.float64)
 
-        super().__init__(model_path="C:/Users/admin/Desktop/rl-humanoid/double_pendulum_cartpole.xml", frame_skip=1, observation_space=observation_space, render_mode=render_mode)
+        super().__init__(model_path=MODEL_PATH, frame_skip=1, observation_space=observation_space, render_mode=render_mode)
 
         self.action_space = Box(low=-1.0, high=1.0, shape=(1,), dtype=np.float32)
 

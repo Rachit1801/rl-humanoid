@@ -63,3 +63,26 @@ reward : score
 terminated : natural ending
 truncated : timeout ending
 info : debug info
+
+# Parallel Training
+
+Gymnasium has `from gymnasium.vector import AsyncVectorEnv`  and `from gymnasium.vector import SyncVectorEnv`
+
+So Now
+
+Example:
+
+```python
+import gymnasium as gym
+from gymnasium.vector import AsyncVectorEnv
+
+envs = AsyncVectorEnv(
+    [lambda: gym.make("CartPole-v1") for _ in range(8)]
+)
+
+obs, _ = envs.reset()
+```
+
+`obs.shape` is `(8, 4)` because you have observations from 8 CartPoles.
+
+So PPO is `2048 steps × 8 envs `

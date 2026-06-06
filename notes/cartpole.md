@@ -288,3 +288,44 @@ model.save("ppo_cartpole_v2")
 ```
 
 ![](C:\Users\admin\AppData\Roaming\marktext\images\2026-06-04-23-25-52-image.png)
+
+### Tensor Board
+
+Library to plot graphs. Shows graphs of training metrics.
+
+Install:
+
+```bash
+pip install tensorboard
+```
+
+Add to PPO:
+
+```python
+model = PPO(    ...    tensorboard_log="./tb_logs/")
+```
+
+Launch TensorBoard. Run:
+
+```bash
+tensorboard --logdir tb_logs
+```
+
+
+
+### Rich + tdqm
+
+SB3 uses Rich to display a nice progress bar.
+
+Example:
+
+```python
+model.learn(
+    total_timesteps=500000,
+    progress_bar=True
+)
+```
+
+```
+100% ━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 500000/500000
+```
