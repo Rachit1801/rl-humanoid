@@ -219,6 +219,28 @@ Fully electric with exceptional range of motion (high DoF, including 360° joint
 
 ---
 
+# venv
+
+#### Windows
+
+```bash
+python -m venv .venv
+.venv\Scripts\activate
+```
+
+#### Linux/Mac
+
+```bash
+python3 -m venv .venvsource 
+.venv/bin/activate
+```
+
+### 3. Install everything
+
+```bash
+pip install -r requirements.txt
+```
+
 # Refrences
 
 [Humanoid robot - Wikipedia](https://en.wikipedia.org/wiki/Humanoid_robot)

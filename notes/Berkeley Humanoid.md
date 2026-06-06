@@ -8,6 +8,8 @@ UniTree
 
 [unitree_model/G1/29dof/usd/g1_29dof_rev_1_0/configuration at main · unitreerobotics/unitree_model · GitHub](https://github.com/unitreerobotics/unitree_model/tree/main/G1/29dof/usd/g1_29dof_rev_1_0/configuration)
 
+[unitree_mujoco/unitree_robots/g1 at main · unitreerobotics/unitree_mujoco · GitHub](https://github.com/unitreerobotics/unitree_mujoco/tree/main/unitree_robots/g1)
+
 File Tree 
 
 ├── .vscode/
