@@ -1,0 +1,4 @@
+.LOG
+Implimented Standing of Unitree G1 with a lot of errors. Needs fix
+02:55 08-06-2026
+Facing Issue : Nan, Inf or huge value in QACC at DOF 0. The simulation is unstable
