@@ -19,13 +19,13 @@ STANDING_HEIGHT = 0.793             # from XML:  pos="0 0 0.793"
 
 class G1Env(MujocoEnv):
 
-    metadata = {"render_modes": ["human", "rgb_array"], "render_fps": 500}
+    metadata = {"render_modes": ["human", "rgb_array"], "render_fps": 100}
 
     def __init__(self, render_mode=None):
 
         observation_space = Box(low=-np.inf, high=np.inf, shape=(69,), dtype=np.float64)
 
-        super().__init__(model_path=MODEL_PATH, frame_skip=1, observation_space=observation_space, render_mode=render_mode)
+        super().__init__(model_path=MODEL_PATH, frame_skip=5, observation_space=observation_space, render_mode=render_mode)
 
         self.action_space = Box(low=-1.0, high=1.0, shape=(29,), dtype=np.float32)
 
@@ -52,8 +52,25 @@ class G1Env(MujocoEnv):
 
     def step(self, action):
 
-        scaled_action = action * TORQUE_LIMITS
-        self.do_simulation(scaled_action, self.frame_skip)
+        target_q = np.zeros(29)
+
+        target_q[0] = -0.2    # left hip pitch
+        target_q[3] =  0.4    # left knee
+        target_q[4] = -0.2    # left ankle pitch
+
+        target_q[6] = -0.2    # right hip pitch
+        target_q[9] =  0.4    # right knee
+        target_q[10]= -0.2    # right ankle pitch
+
+        target_q = target_q + 0.15 * action
+
+        q = self.data.qpos[7:]      # joint positions
+        qd = self.data.qvel[6:]     # joint velocities
+        kp = 100.0
+        kd = 5.0
+        torque = kp * (target_q - q) - kd * qd
+        torque = np.clip(torque, -TORQUE_LIMITS, TORQUE_LIMITS)
+        self.do_simulation(torque, self.frame_skip)
 
         obs = self._get_obs()
         

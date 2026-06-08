@@ -22,7 +22,7 @@ if __name__ == "__main__":      #Windows Guard(only needed in Windows)
     # model.save("ppo_cartpole_v2")
 
     print("\nStarting PPO training...")
-    model.learn(total_timesteps=1_000_000, progress_bar=True)
+    model.learn(total_timesteps=500_000, progress_bar=True)
     model.save("models/g1_stand")
     print("\nTraining Complete")
     train_env.close()
