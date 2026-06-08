@@ -25,9 +25,37 @@ Think of it like a spring. If your knee is away from the target torque increase.
 
 For humanoids, PPO usually outputs `desired_joint_positions` not torques. Then PD control converts those positions into torques. This is why modern locomotion training is much more stable.
 
+As the actuators of G1 uses pure torque actuators `self.data.ctrl[i]` is interpreted as apply this much torque. There is no built-in position controller.
+
+Now to get target knee, we create reference standing position. For example:
+
+```
+target_q = np.zeros(29)
+
+target_q[0] = -0.2    # left hip pitch
+target_q[3] =  0.4    # left knee
+target_q[4] = -0.2    # left ankle pitch
+
+target_q[6] = -0.2    # right hip pitch
+target_q[9] =  0.4    # right knee
+target_q[10]= -0.2    # right ankle pitch
+```
+
+These numbers are just a starting guess.
+
+In PD control, we define a target position for each joint. The controller continuously applies torque to reduce the error between the current joint position and the target joint position.
+
+If the joint is far from the target, the controller applies a larger corrective torque. As the joint approaches the target, the corrective torque decreases. The derivative term adds damping, reducing oscillations and preventing overshoot.
+
+This raises an important question, What happens if the chosen target joint configuration is not actually a stable pose for the robot? Can a PD controller still keep the robot balanced, or will the robot eventually fall despite perfectly tracking the target pose?
+
+`target_q = standing_pose + 0.15 * action` The `action` comes from PPO. So PPO is learning values of action. We are not training RL to produce motor torques anymore. We are training RL to produce desired joint positions (or offsets from a standing pose), and PD handles the motor control underneath.
+
+The PD controller handles low-level motor control, while PPO learns the higher-level balancing strategy.
+
 ---
 
-Now in the xml code of the g1
+### xml code of the g1
 
 ``` xml
 <motor name="left_hip_pitch" joint="left_hip_pitch_joint" ctrlrange="-88 88" />
@@ -127,3 +155,12 @@ terminated = bool(
         )
 ```
 
+---
+
+### My Story while Training the model
+
+A custom Gymnasium environment was developed for the Unitree G1 humanoid robot in MuJoCo. Initially, PPO directly controlled the motor torques, but this resulted in unstable simulations due to large random torques generated during early training. To improve stability, the control architecture was changed to use a PD (Proportional-Derivative) controller.
+
+A nominal standing pose was defined using hip, knee, and ankle joint targets. Instead of generating torques directly, PPO now outputs small offsets to these target joint positions. The PD controller converts the desired joint positions into torques, allowing PPO to focus on high-level balance control while the PD controller handles low-level motor control.
+
+The PD controller was tested independently without reinforcement learning. The robot was able to maintain its standing pose for approximately 1200 simulation steps before eventually toppling over. This confirmed that the controller was stable and no longer produced simulation explosions or NaN errors. However, the robot still lacks an active balancing strategy, as a PD controller can maintain a pose but cannot reason about balance, center of mass, or falling direction.

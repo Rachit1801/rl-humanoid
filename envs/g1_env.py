@@ -16,6 +16,13 @@ TORQUE_LIMITS = np.array([
 
 STANDING_HEIGHT = 0.793             # from XML:  pos="0 0 0.793"
 
+STANDING_POSE = np.zeros(29)
+STANDING_POSE[0]  = -0.2    # left  hip pitch
+STANDING_POSE[3]  =  0.4    # left  knee
+STANDING_POSE[4]  = -0.2    # left  ankle pitch
+STANDING_POSE[6]  = -0.2    # right hip pitch
+STANDING_POSE[9]  =  0.4    # right knee
+STANDING_POSE[10] = -0.2    # right ankle pitch
 
 class G1Env(MujocoEnv):
 
@@ -29,6 +36,8 @@ class G1Env(MujocoEnv):
 
         self.action_space = Box(low=-1.0, high=1.0, shape=(29,), dtype=np.float32)
 
+        self._smoothed_action = np.zeros(29, dtype=np.float64)      # EMA smoother
+
     def _get_obs(self):
 
         return np.concatenate([self.data.qpos[2:], self.data.qvel])     # Skip global x, y as we are learning to stand
@@ -36,38 +45,27 @@ class G1Env(MujocoEnv):
     def reset_model(self):
 
         qpos = np.zeros(self.model.nq)
-        qpos[0] = 0.0             # x
-        qpos[1] = 0.0             # y
         qpos[2] = STANDING_HEIGHT # z
         qpos[3] = 1.0             # quaternion w
-        qpos[4] = 0.0             # quaternion x
-        qpos[5] = 0.0             # quaternion y
-        qpos[6] = 0.0             # quaternion z
-        qpos[7:] = self.np_random.uniform(-0.05, 0.05, size=29)
+        qpos[7:] = STANDING_POSE.copy() # self.np_random.uniform(-0.05, 0.05, size=29)
 
-        qvel = self.np_random.uniform(-0.05, 0.05, size=self.model.nv)
+        qvel = np.zeros(self.model.nv) # self.np_random.uniform(-0.05, 0.05, size=self.model.nv)
 
         self.set_state(qpos, qvel)
+        self._smoothed_action[:] = 0.0 
+
         return self._get_obs()
 
     def step(self, action):
 
-        target_q = np.zeros(29)
+        self._smoothed_action = 0.8 * self._smoothed_action + 0.2 * action
 
-        target_q[0] = -0.2    # left hip pitch
-        target_q[3] =  0.4    # left knee
-        target_q[4] = -0.2    # left ankle pitch
-
-        target_q[6] = -0.2    # right hip pitch
-        target_q[9] =  0.4    # right knee
-        target_q[10]= -0.2    # right ankle pitch
-
-        target_q = target_q + 0.15 * action
+        target_q = STANDING_POSE + 0.1 * self._smoothed_action
 
         q = self.data.qpos[7:]      # joint positions
         qd = self.data.qvel[6:]     # joint velocities
-        kp = 100.0
-        kd = 5.0
+        kp = 50.0
+        kd = 10.0
         torque = kp * (target_q - q) - kd * qd
         torque = np.clip(torque, -TORQUE_LIMITS, TORQUE_LIMITS)
         self.do_simulation(torque, self.frame_skip)
@@ -76,12 +74,14 @@ class G1Env(MujocoEnv):
         
         height = self.data.qpos[2]
         height_reward = float(np.clip(height/STANDING_HEIGHT, 0.0, 1.0)) * 2
-        upright = float(self.data.body("pelvis").xmat[8]) * 2
-        energy = 0.001 * float(np.sum(action**2))
+        xmat_zz  = float(self.data.body("pelvis").xmat[8])   # 1.0 = upright, 0.0 = 90°
+        upright = xmat_zz * 2.0
+        energy = 0.001 * float(np.sum(self._smoothed_action ** 2))
+        vel_penalty = 0.005 * float(np.sum(qd ** 2))
 
-        reward = 0.5 + height_reward + upright - energy
+        reward = 0.5 + height_reward + upright - energy - vel_penalty
 
-        terminated = bool(height < 0.35 or upright < 0.5)
+        terminated = bool(height < 0.35 or xmat_zz < 0.5)
         truncated = False
         info = {}
         return (obs, reward, terminated, truncated, info)

@@ -14,7 +14,7 @@ if __name__ == "__main__":      #Windows Guard(only needed in Windows)
     check_env(G1Env())                          # Check Env (one time only)
     print("Env Check SuccessFul")
 
-    model = PPO(policy="MlpPolicy", env=train_env, learning_rate=3e-4, n_steps=2048, batch_size=64, n_epochs=10, gamma=0.99, verbose=0) # tensorboard_log = "./tb_logs/"
+    model = PPO(policy="MlpPolicy", env=train_env, learning_rate=3e-4, n_steps=2048, batch_size=64, n_epochs=10, gamma=0.99, verbose=0, tensorboard_log = "./tb_logs/") # tensorboard_log = "./tb_logs/"
 
     # Load and continue training
     # model = PPO.load("models/training_data", env=train_env)
