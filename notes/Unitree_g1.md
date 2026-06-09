@@ -53,6 +53,8 @@ This raises an important question, What happens if the chosen target joint confi
 
 The PD controller handles low-level motor control, while PPO learns the higher-level balancing strategy.
 
+I found official kp and kd values in https://github.com/unitreerobotics/unitree_rl_lab/blob/main/deploy/robots/g1_29dof/config/config.yaml 
+
 ---
 
 ### xml code of the g1
@@ -164,3 +166,39 @@ A custom Gymnasium environment was developed for the Unitree G1 humanoid robot i
 A nominal standing pose was defined using hip, knee, and ankle joint targets. Instead of generating torques directly, PPO now outputs small offsets to these target joint positions. The PD controller converts the desired joint positions into torques, allowing PPO to focus on high-level balance control while the PD controller handles low-level motor control.
 
 The PD controller was tested independently without reinforcement learning. The robot was able to maintain its standing pose for approximately 1200 simulation steps before eventually toppling over. This confirmed that the controller was stable and no longer produced simulation explosions or NaN errors. However, the robot still lacks an active balancing strategy, as a PD controller can maintain a pose but cannot reason about balance, center of mass, or falling direction.
+
+---
+
+I looked at source/unitree_rl_lab/unitree_rl_lab/tasks/locomotion/robots/g1/29dof/velocity_env_cfg.py and it was a pure issac labs walking code. I found a few observations
+
+I used currently use qpos, qvel as observation but Unitree uses 
+base angular velocity (3)
+projected gravity (3)
+velocity command (3)
+joint positions (12)
+joint velocities (12)
+previous action (12)
+sin phase (1)
+cos phase (1)
+
+They explicitly penalize vibration with joint_vel, action_rate, joint_acc, energy. These are all vibration killers.
+
+They train with pushes every 5 seconds. So the robot learns recovery from disturbances.
+
+They terminate much earlier `bad_orientation(limit_angle=0.8)` 0.8 rad ≈ 46°
+
+Rewards
+
+```
+velocity tracking
+upright reward
+energy penalty
+action rate penalty
+joint limit penalty
+feet clearance
+feet contact
+```
+
+Also I tried using action smoother but unitree dosnet use it
+
+They use recurrent PPO `rnn_type = "lstm"`. It means the policy remembers recent history.

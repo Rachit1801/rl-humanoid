@@ -8,3 +8,7 @@ I have tried many variations but nothing works, I will implement PD controls now
 PD control finnaly works and now the robot is not breaking its bones now
 It gives no error in training... its just not standing properly
 Its vibrating like someone pointed a gun at him
+02:22 09-06-2026
+Tried smoothed_action... Changed reward... Doesn't stand 
+12:42 09-06-2026
+I dived into so many GitHub repository of Unitree looking at 10s of codes and matching so many things with my code... I see progress... It still topples but now it falls on its back

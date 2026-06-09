@@ -16,13 +16,13 @@ TORQUE_LIMITS = np.array([
 
 STANDING_HEIGHT = 0.793             # from XML:  pos="0 0 0.793"
 
-STANDING_POSE = np.zeros(29)
-STANDING_POSE[0]  = -0.2    # left  hip pitch
-STANDING_POSE[3]  =  0.4    # left  knee
-STANDING_POSE[4]  = -0.2    # left  ankle pitch
-STANDING_POSE[6]  = -0.2    # right hip pitch
-STANDING_POSE[9]  =  0.4    # right knee
-STANDING_POSE[10] = -0.2    # right ankle pitch
+STANDING_POSE = np.array([
+    -0.1, 0, 0, 0.3, -0.2, 0,
+    -0.1, 0, 0, 0.3, -0.2, 0,
+    0, 0, 0,
+    0, 0.25, 0, 0.97, 0.15, 0, 0,
+    0, -0.25, 0, 0.97, -0.15, 0, 0
+])
 
 class G1Env(MujocoEnv):
 
@@ -60,12 +60,27 @@ class G1Env(MujocoEnv):
 
         self._smoothed_action = 0.8 * self._smoothed_action + 0.2 * action
 
-        target_q = STANDING_POSE + 0.1 * self._smoothed_action
+        target_q = STANDING_POSE + 0.20 * self._smoothed_action
 
         q = self.data.qpos[7:]      # joint positions
         qd = self.data.qvel[6:]     # joint velocities
-        kp = 50.0
-        kd = 10.0
+        
+        kp = np.array([             # kp and kd values taken from unitreerobotics/unitree_rl_lab/deploy/robots/g1_29dof/config/config.yaml
+        100,100,100,150,40,40,
+        100,100,100,150,40,40,
+        200,200,200,
+        40,40,40,40,40,40,40,
+        40,40,40,40,40,40,40
+        ])
+
+        kd = np.array([
+        2,2,2,4,2,2,
+        2,2,2,4,2,2,
+        5,5,5,
+        10,10,10,10,10,10,10,
+        10,10,10,10,10,10,10
+        ])
+
         torque = kp * (target_q - q) - kd * qd
         torque = np.clip(torque, -TORQUE_LIMITS, TORQUE_LIMITS)
         self.do_simulation(torque, self.frame_skip)
