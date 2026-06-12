@@ -1,28 +1,11 @@
+from g1_config import REWARD_ALIVE
 import os
 import numpy as np
 
 from gymnasium.envs.mujoco import MujocoEnv
 from gymnasium.spaces import Box
 
-MODEL_PATH = os.path.join(os.path.dirname(__file__),"..","assets","scene_29dof.xml")
-
-TORQUE_LIMITS = np.array([
-    88, 88, 88, 139, 50, 50,        # Left Leg
-    88, 88, 88, 139, 50, 50,        # Right Leg
-    88, 50, 50,                     # Waist
-    25, 25, 25, 25, 25, 5, 5,       # Left Arm
-    25, 25, 25, 25, 25, 5, 5,       # Right Arm
-], dtype=np.float64)                # shape (29,)
-
-STANDING_HEIGHT = 0.793             # from XML:  pos="0 0 0.793"
-
-STANDING_POSE = np.array([
-    -0.1, 0, 0, 0.3, -0.2, 0,
-    -0.1, 0, 0, 0.3, -0.2, 0,
-    0, 0, 0,
-    0, 0.25, 0, 0.97, 0.15, 0, 0,
-    0, -0.25, 0, 0.97, -0.15, 0, 0
-])
+from g1_config import *
 
 class G1Env(MujocoEnv):
 
@@ -30,75 +13,83 @@ class G1Env(MujocoEnv):
 
     def __init__(self, render_mode=None):
 
-        observation_space = Box(low=-np.inf, high=np.inf, shape=(69,), dtype=np.float64)
+        observation_space = Box(low=-np.inf, high=np.inf, shape=(67,), dtype=np.float64)
 
         super().__init__(model_path=MODEL_PATH, frame_skip=5, observation_space=observation_space, render_mode=render_mode)
 
         self.action_space = Box(low=-1.0, high=1.0, shape=(29,), dtype=np.float32)
 
-        self._smoothed_action = np.zeros(29, dtype=np.float64)      # EMA smoother
+        self._step_count = 0
 
     def _get_obs(self):
 
-        return np.concatenate([self.data.qpos[2:], self.data.qvel])     # Skip global x, y as we are learning to stand
-
+        pelvis_xmat = self.data.body("pelvis").xmat.reshape(3, 3)
+        base_ang_vel = self.data.qvel[3:6]
+        body_ang_vel = pelvis_xmat.T @ base_ang_vel
+        base_lin_vel = self.data.qvel[0:3]
+        body_lin_vel = pelvis_xmat.T @ base_lin_vel 
+        projected_gravity = pelvis_xmat.T @ np.array([0.0, 0.0, -1.0])
+        joint_pos = self.data.qpos[7:] - STANDING_POSE
+        joint_vel = self.data.qvel[6:]
+        
+        return np.concatenate([
+            body_ang_vel,body_lin_vel,projected_gravity,joint_pos,joint_vel
+        ], dtype=np.float64)        # 67
+       
     def reset_model(self):
 
         qpos = np.zeros(self.model.nq)
-        qpos[2] = STANDING_HEIGHT # z
-        qpos[3] = 1.0             # quaternion w
-        qpos[7:] = STANDING_POSE.copy() # self.np_random.uniform(-0.05, 0.05, size=29)
-
-        qvel = np.zeros(self.model.nv) # self.np_random.uniform(-0.05, 0.05, size=self.model.nv)
+        qpos[2] = STANDING_HEIGHT       # z
+        qpos[3] = 1.0                   # quaternion w
+        qpos[7:] = STANDING_POSE.copy()
+        qpos += self.np_random.uniform(-0.02, 0.02, size=self.model.nv)
+        
+        qvel = np.zeros(self.model.nv) 
+        qvel[6:] = self.np_random.uniform(-0.01, 0.01, size=self.model.nv)
 
         self.set_state(qpos, qvel)
-        self._smoothed_action[:] = 0.0 
 
         return self._get_obs()
 
     def step(self, action):
 
-        self._smoothed_action = 0.8 * self._smoothed_action + 0.2 * action
+        self._step_count += 1
 
-        target_q = STANDING_POSE + 0.20 * self._smoothed_action
+        target_q = STANDING_POSE + ACTION_SCALE * action
 
         q = self.data.qpos[7:]      # joint positions
         qd = self.data.qvel[6:]     # joint velocities
-        
-        kp = np.array([             # kp and kd values taken from unitreerobotics/unitree_rl_lab/deploy/robots/g1_29dof/config/config.yaml
-        100,100,100,150,40,40,
-        100,100,100,150,40,40,
-        200,200,200,
-        40,40,40,40,40,40,40,
-        40,40,40,40,40,40,40
-        ])
-
-        kd = np.array([
-        2,2,2,4,2,2,
-        2,2,2,4,2,2,
-        5,5,5,
-        10,10,10,10,10,10,10,
-        10,10,10,10,10,10,10
-        ])
 
         torque = kp * (target_q - q) - kd * qd
         torque = np.clip(torque, -TORQUE_LIMITS, TORQUE_LIMITS)
+
         self.do_simulation(torque, self.frame_skip)
 
         obs = self._get_obs()
         
         height = self.data.qpos[2]
-        height_reward = float(np.clip(height/STANDING_HEIGHT, 0.0, 1.0)) * 2
-        xmat_zz  = float(self.data.body("pelvis").xmat[8])   # 1.0 = upright, 0.0 = 90°
-        upright = xmat_zz * 2.0
-        energy = 0.001 * float(np.sum(self._smoothed_action ** 2))
-        vel_penalty = 0.005 * float(np.sum(qd ** 2))
+        height_reward = REWARD_HEIGHT * np.exp(-HEIGHT_GAUSSIAN_K * (height - STANDING_HEIGHT) ** 2) #Gaussian
 
-        reward = 0.5 + height_reward + upright - energy - vel_penalty
+        upright  = float(self.data.body("pelvis").xmat[8])   # 1.0 = upright, 0.0 = 90°
+        upright_reward = REWARD_UPRIGHT * max(0.0, upright)
 
-        terminated = bool(height < 0.35 or xmat_zz < 0.5)
-        truncated = False
+        energy = PENALTY_ENERGY * float(np.sum(np.abs(torque * qd)))
+        vel_penalty = PENALTY_JOINT_VEL * float(np.sum(qd ** 2))
+        #hip_penalty = float(np.sum(np.square(q[[1, 2, 7, 8]])))
+        action_penalty = PENALTY_ACTION * float(np.sum(action ** 2))
+        posture_penalty = PENALTY_POSTURE * float(np.sum((q - STANDING_POSE) ** 2))
+        com_drift_penalty = PENALTY_COM_DRIFT * float(self.data.qpos[0] ** 2 + self.data.qpos[1] ** 2)
+        base_angvel_penalty = PENALTY_BASE_ANGVEL * float(np.sum(self.data.qvel[3:6] ** 2))
+
+        reward = REWARD_ALIVE + height_reward + upright_reward + energy + vel_penalty + action_penalty + posture_penalty + com_drift_penalty + base_angvel_penalty
+
+        # if(self._step_count == 1000) :
+        #     reward += 100
+
+        terminated = bool(height < 0.4 or upright < 0.75)
+        truncated = bool(self._step_count >= MAX_EPISODE_STEPS)
         info = {}
+        
         return (obs, reward, terminated, truncated, info)
 
 def make_env(rank: int):

@@ -10,6 +10,10 @@ UniTree
 
 [unitree_mujoco/unitree_robots/g1 at main · unitreerobotics/unitree_mujoco · GitHub](https://github.com/unitreerobotics/unitree_mujoco/tree/main/unitree_robots/g1)
 
+https://github.com/google-deepmind/mujoco_playground/blob/main/mujoco_playground/_src/locomotion/g1/joystick.py
+
+
+
 File Tree 
 
 ├── .vscode/
