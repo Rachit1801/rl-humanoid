@@ -1,11 +1,9 @@
-from g1_config import REWARD_ALIVE
-import os
 import numpy as np
 
 from gymnasium.envs.mujoco import MujocoEnv
 from gymnasium.spaces import Box
 
-from g1_config import *
+from envs.g1_config import *
 
 class G1Env(MujocoEnv):
 
@@ -42,13 +40,13 @@ class G1Env(MujocoEnv):
         qpos[2] = STANDING_HEIGHT       # z
         qpos[3] = 1.0                   # quaternion w
         qpos[7:] = STANDING_POSE.copy()
-        qpos += self.np_random.uniform(-0.02, 0.02, size=self.model.nv)
+        qpos[7:] += self.np_random.uniform(-0.02, 0.02, size=29)
         
         qvel = np.zeros(self.model.nv) 
-        qvel[6:] = self.np_random.uniform(-0.01, 0.01, size=self.model.nv)
+        qvel[6:] = self.np_random.uniform(-0.01, 0.01, size=29)
 
         self.set_state(qpos, qvel)
-
+        self._step_count = 0
         return self._get_obs()
 
     def step(self, action):

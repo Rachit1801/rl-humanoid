@@ -1,4 +1,5 @@
 import numpy as np 
+import os
 
 MODEL_PATH = os.path.join(os.path.dirname(__file__),"..","assets","scene_29dof.xml")
 
@@ -28,13 +29,15 @@ ACTION_SCALE = np.array([
     0.30, 0.30, 0.20, 0.30, 0.15, 0.10, 0.10,
 ], dtype=np.float64)
 
-STANDING_POSE = np.array([
-    -0.1, 0, 0, 0.3, -0.2, 0,
-    -0.1, 0, 0, 0.3, -0.2, 0,
-    0, 0, 0,
-    0, 0.25, 0, 0.97, 0.15, 0, 0,
-    0, -0.25, 0, 0.97, -0.15, 0, 0
-])
+# STANDING_POSE = np.array([
+#     -0.1, 0, 0, 0.3, -0.2, 0,
+#     -0.1, 0, 0, 0.3, -0.2, 0,
+#     0, 0, 0,
+#     0, 0.25, 0, 0.97, 0.15, 0, 0,
+#     0, -0.25, 0, 0.97, -0.15, 0, 0
+# ])
+
+STANDING_POSE = np.zeros(29, dtype=np.float64)
 
 kp = np.array([             # kp and kd values taken from unitreerobotics/unitree_rl_lab/deploy/robots/g1_29dof/config/config.yaml
         100, 100, 100, 150, 40, 40,

@@ -12,3 +12,6 @@ Its vibrating like someone pointed a gun at him
 Tried smoothed_action... Changed reward... Doesn't stand 
 12:42 09-06-2026
 I dived into so many GitHub repository of Unitree looking at 10s of codes and matching so many things with my code... I see progress... It still topples but now it falls on its back
+11:26 14-06-2026
+IT WORKS !!!
+Standing pos was above so it was falling every time

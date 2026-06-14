@@ -86,3 +86,36 @@ obs, _ = envs.reset()
 `obs.shape` is `(8, 4)` because you have observations from 8 CartPoles.
 
 So PPO is `2048 steps × 8 envs `
+
+---
+
+## Using GPU for PPO Training in MuJoCo
+
+verify that PyTorch can detect the GPU:
+
+```python
+import torch
+
+print(torch.cuda.is_available())
+print(torch.cuda.get_device_name(0))
+```
+
+Expected output:
+
+```
+True
+NVIDIA RTX ...
+```
+
+To use the GPU for PPO training, add the following parameter when creating the model:
+
+```python
+model = PPO(
+    policy="MlpPolicy",
+    env=train_env,
+    device="cuda",
+    ...
+)
+```
+
+The expected speed improvement from enabling GPU training is approximately 10% – 30% because the simulation remains CPU-bound.

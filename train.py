@@ -17,21 +17,22 @@ if __name__ == "__main__":      #Windows Guard(only needed in Windows)
     train_env = VecMonitor(train_env)   # tracks episode rewards & lengths
     train_env = VecNormalize(train_env,norm_obs=True,norm_reward=True,clip_obs=10.0,clip_reward=10.0,gamma=0.99,)
 
-    model = PPO(policy="MlpPolicy", env=train_env, learning_rate=3e-4, n_steps=2048, batch_size=512, n_epochs=10, gamma=0.99, verbose=0, tensorboard_log = "./tb_logs/")
+    model = PPO(policy="MlpPolicy", env=train_env, learning_rate=3e-4, n_steps=2048, batch_size=512, n_epochs=10, gamma=0.99, verbose=1, policy_kwargs=dict(net_arch=[256, 256]), tensorboard_log = "./tb_logs/")
 
     checkpoint_callback = CheckpointCallback(
         save_freq=max(50_000 // 8, 1),
         save_path=os.path.join("models", "checkpoints"),
-        name_prefix="g1_stand",
+        name_prefix="g1_stand_retry",
         save_vecnormalize=True,
         verbose=1,
     )
 
-    callbacks = CallbackList(checkpoint_callback)
+    callbacks = CallbackList([checkpoint_callback])
 
     print("\nStarting PPO training...")
-    model.learn(total_timesteps=2_000_000,callback=callbacks, progress_bar=True)
-    model.save("models/g1_stand")
+    model.learn(total_timesteps=3_000_000,callback=callbacks, progress_bar=True)
+    model.save("models/g1_stand_retry")
+    train_env.save("models/g1_stand_retry_vecnorm.pkl")
     print("\nTraining Complete")
     train_env.close()
 
