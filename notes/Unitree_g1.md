@@ -202,3 +202,41 @@ feet contact
 Also I tried using action smoother but unitree dosnet use it
 
 They use recurrent PPO `rnn_type = "lstm"`. It means the policy remembers recent history.
+
+---
+
+After training and working graphs
+
+#### train/approx_kl
+
+Shows PPO stability.
+
+![image-20260614113657060](C:\Users\admin\AppData\Roaming\Typora\typora-user-images\image-20260614113657060.png)
+
+After approximately 3 million training timesteps, the learned policy achieved an average episode length of ~1652 simulation steps and an average reward of ~6309. The value function converged successfully with an explained variance of 0.988 and a value loss close to zero, indicating stable PPO optimization and successful acquisition of the standing behavior.
+
+#### rollout/ep_len_mean
+
+Average episode length during the rollout.
+
+![image-20260614114657273](C:\Users\admin\AppData\Roaming\Typora\typora-user-images\image-20260614114657273.png)
+
+#### rollout/ep_rew_mean
+
+Average total reward obtained per episode. PPO tries to maximize this value.
+
+![image-20260614114808237](C:\Users\admin\AppData\Roaming\Typora\typora-user-images\image-20260614114808237.png)
+
+# Balance on a Moving Platform
+
+Plan 
+
+1) Stand on ground
+2) Stand while being pushed
+3) Stand on a moving platform
+4) Stand on a moving platform with unpredictable disturbances
+
+Every few seconds Apply random pushes to pelvis. `force_x = np.random.uniform(-20, 20)`
+
+Slowly increase the random push force
+
