@@ -35,3 +35,15 @@ Recovery bonus during grace
 
 Push force in observation (67 to 70 dims) helps policy react proactively, but complicates weight transfer
 
+---
+
+When loading existing model and training over it just load your standing model instead of creating a fresh one
+
+```python
+# wrong for push training:
+model = PPO(policy="MlpPolicy", env=train_env, ...)
+
+# Replace with:
+model = PPO.load("models/g1_stand_retry", env=train_env)
+```
+

@@ -15,13 +15,7 @@ class G1Env(MujocoEnv):
         super().__init__(model_path=MODEL_PATH, frame_skip=5, observation_space=observation_space, render_mode=render_mode)
         self.action_space = Box(low=-1.0, high=1.0, shape=(29,), dtype=np.float32)
         self._step_count = 0
-
-        # Push state
-        self._push_countdown   = 0
-        self._push_remaining   = 0
-        self._grace_remaining  = 0
-        self._push_force       = np.zeros(3, dtype=np.float64)
-        self._push_body_id     = self.model.body("pelvis").id  # or "torso_link"
+        self._push_body_id = self.model.body("pelvis").id  # or "torso_link"
 
     def _get_obs(self):
 
@@ -60,8 +54,7 @@ class G1Env(MujocoEnv):
         self._push_force = np.zeros(3, dtype=np.float64)
         return self._get_obs()
 
-    def _apply_push(self):
-        """Call every step BEFORE do_simulation()."""
+    def _apply_push(self):      # Call every step BEFORE do_simulation
         if self._push_remaining > 0:
             self._push_remaining -= 1
             if self._push_remaining == 0:
