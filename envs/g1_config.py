@@ -57,7 +57,7 @@ kd = np.array([
 
 MAX_EPISODE_STEPS = 2000      # Doubled: policy must learn long-term stability
 
-# Max per-step reward ~ 7.0 (standing perfectly still at origin)
+# Rewards weights
 REWARD_ALIVE         =  2.0
 REWARD_HEIGHT        =  3.0
 REWARD_UPRIGHT       =  2.0     # Alignment of pelvis z-axis with world z
@@ -68,3 +68,12 @@ PENALTY_POSTURE      = -0.15    # (joint_pos - standing_pose)^2  (increased)
 PENALTY_COM_DRIFT    = -3.0     # xy position drift from origin (NEW)
 PENALTY_BASE_ANGVEL  = -0.1     # base angular velocity^2 (prevents rotational drift)
 HEIGHT_GAUSSIAN_K   = 40.0  
+
+# Push disturbance config
+PUSH_FORCE_MIN    = 15.0     # Newtons
+PUSH_FORCE_MAX    = 30.0     # Newtons
+PUSH_INTERVAL_MIN = 80       # steps
+PUSH_INTERVAL_MAX = 200      # steps
+PUSH_DURATION     = 5        # steps the force lasts
+PUSH_GRACE        = 30       # steps of recovery window after push
+PUSH_PENALTY_SCALE = 0.3     # relax posture/COM penalties during disturbance

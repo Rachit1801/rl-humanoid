@@ -22,23 +22,26 @@ if __name__ == "__main__":      #Windows Guard(only needed in Windows)
     checkpoint_callback = CheckpointCallback(
         save_freq=max(50_000 // 8, 1),
         save_path=os.path.join("models", "checkpoints"),
-        name_prefix="g1_stand_retry",
+        name_prefix="g1_stand_force",
         save_vecnormalize=True,
         verbose=1,
     )
 
     callbacks = CallbackList([checkpoint_callback])
 
+    train_env = VecNormalize.load("models/g1_stand_retry_vecnorm.pkl", train_env)
+    model = PPO.load("models/g1_stand_retry", env=train_env)
+
     print("\nStarting PPO training...")
-    model.learn(total_timesteps=3_000_000,callback=callbacks, progress_bar=True)
-    model.save("models/g1_stand_retry")
-    train_env.save("models/g1_stand_retry_vecnorm.pkl")
+    model.learn(total_timesteps=2_000_000,callback=callbacks, progress_bar=True)
+    model.save("models/g1_stand_force")
+    train_env.save("models/g1_stand_force_vecnorm.pkl")
     print("\nTraining Complete")
     train_env.close()
 
 
     # ── Resume Training (uncomment to continue from checkpoint) ───────────────
-    # """
+    # 
     # checkpoint = "models/checkpoints/g1_stand_XXXXX_steps"
     # vecnorm_checkpoint = "models/checkpoints/g1_stand_XXXXX_steps_vecnormalize.pkl"
     #
@@ -52,4 +55,3 @@ if __name__ == "__main__":      #Windows Guard(only needed in Windows)
     # model.save("models/g1_stand_v2")
     # train_env.save("models/g1_stand_v2_vecnorm.pkl")
     # train_env.close()
-    # """

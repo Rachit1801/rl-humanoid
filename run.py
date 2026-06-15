@@ -6,6 +6,8 @@ from envs.g1_env import G1Env
 # env = G1Env(render_mode="human")
 env = DummyVecEnv([lambda: G1Env(render_mode="human")])
 env = VecNormalize.load("models/g1_stand_retry_vecnorm.pkl", env)
+env.training = False
+env.norm_reward = False
 model = PPO.load("models/g1_stand_retry")
 obs = env.reset()
 for step in range(2000):

@@ -227,16 +227,3 @@ Average total reward obtained per episode. PPO tries to maximize this value.
 
 ![image-20260614114808237](C:\Users\admin\AppData\Roaming\Typora\typora-user-images\image-20260614114808237.png)
 
-# Balance on a Moving Platform
-
-Plan 
-
-1) Stand on ground
-2) Stand while being pushed
-3) Stand on a moving platform
-4) Stand on a moving platform with unpredictable disturbances
-
-Every few seconds Apply random pushes to pelvis. `force_x = np.random.uniform(-20, 20)`
-
-Slowly increase the random push force
-
