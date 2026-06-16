@@ -70,8 +70,8 @@ PENALTY_BASE_ANGVEL  = -0.1     # base angular velocity^2 (prevents rotational d
 HEIGHT_GAUSSIAN_K   = 40.0  
 
 # Push disturbance config
-PUSH_FORCE_MIN    = 15.0     # Newtons
-PUSH_FORCE_MAX    = 30.0     # Newtons
+PUSH_FORCE_MIN    = 30.0     # Newtons
+PUSH_FORCE_MAX    = 60.0     # Newtons
 PUSH_INTERVAL_MIN = 80       # steps
 PUSH_INTERVAL_MAX = 200      # steps
 PUSH_DURATION     = 5        # steps the force lasts

@@ -23,16 +23,16 @@ if __name__ == "__main__":      #Windows Guard(only needed in Windows)
 
     callbacks = CallbackList([checkpoint_callback])
 
-    train_env = VecNormalize.load("models/g1_stand_retry_vecnorm.pkl", train_env)
-    model = PPO.load("models/g1_stand_retry", env=train_env)
+    train_env = VecNormalize.load("models/g1_stand_force_vecnorm.pkl", train_env)
+    model = PPO.load("models/g1_stand_force", env=train_env)
 
     train_env.training = True
     train_env.norm_reward = True
 
     print("\nStarting PPO training...")
     model.learn(total_timesteps=2_000_000,callback=callbacks, progress_bar=True)
-    model.save("models/g1_stand_force")
-    train_env.save("models/g1_stand_force_vecnorm.pkl")
+    model.save("models/g1_stand_force_2")
+    train_env.save("models/g1_stand_force_vecnorm_2.pkl")
     print("\nTraining Complete")
     train_env.close()
 
