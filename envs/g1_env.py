@@ -63,7 +63,6 @@ class G1Env(MujocoEnv):
                 self._push_force = np.zeros(3, dtype=np.float64)
                 self._grace_remaining = PUSH_GRACE
                 self._push_countdown = self.np_random.integers(PUSH_INTERVAL_MIN, PUSH_INTERVAL_MAX + 1)
-                print(f"  [PUSH END]  step={self._step_count}")
             return
 
         if self._grace_remaining > 0:
@@ -77,7 +76,7 @@ class G1Env(MujocoEnv):
             self._push_force = np.array([mag * np.cos(angle), mag * np.sin(angle), 0.0])
             self.data.xfrc_applied[self._push_body_id, :3] = self._push_force
             self._push_remaining = PUSH_DURATION
-            print(f"  [PUSH START] step={self._step_count}  mag={mag:.1f}N  angle={np.degrees(angle):.0f}°  fx={self._push_force[0]:.1f}  fy={self._push_force[1]:.1f}")
+            print(f"  [PUSH] step={self._step_count}  mag={mag:.1f}N  angle={np.degrees(angle):.0f}°  fx={self._push_force[0]:.1f}  fy={self._push_force[1]:.1f}")
 
     def step(self, action):
 

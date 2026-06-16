@@ -5,10 +5,10 @@ from envs.g1_env import G1Env
 
 # env = G1Env(render_mode="human")
 env = DummyVecEnv([lambda: G1Env(render_mode="human")])
-env = VecNormalize.load("models/g1_stand_retry_vecnorm.pkl", env)
+env = VecNormalize.load("models/g1_stand_force_vecnorm_2.pkl", env)
 env.training = False
 env.norm_reward = False
-model = PPO.load("models/g1_stand_retry")
+model = PPO.load("models/g1_stand_force_2")
 obs = env.reset()
 for step in range(2000):
     action, _ = model.predict(obs, deterministic=True)
