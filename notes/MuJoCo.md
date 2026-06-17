@@ -293,3 +293,22 @@ print(data.qvel)
 Every joint adds position and velocity to the observation space.
 
 Gymnasium usually combines these into `obs = np.concatenate([ qpos, qvel, sensors` . This becomes input to PPO.
+
+## `mocap_pos`
+
+directly control its position from Python instead of letting physics move it.
+
+```python
+self.data.mocap_pos[0] = [x, y, z]
+```
+
+MuJoCo does not compute velocity, acceleration, momentum for mocap bodies. It simply sees Old position and New position every update.
+
+But mocap body has `qvel = 0` always. Physics sees platform not moving during most substeps. So contact solver doesn't generate realistic friction.
+
+```xml
+<body name="platform" pos="0 0 -0.05" mocap="true">
+      <geom name="platform" type="box" size="0.5 0.5 0.05" mass="1000"/>
+</body>
+```
+

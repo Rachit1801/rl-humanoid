@@ -15,3 +15,6 @@ I dived into so many GitHub repository of Unitree looking at 10s of codes and ma
 11:26 14-06-2026
 IT WORKS !!!
 Standing pos was above so it was falling every time
+15:25 17-06-2026
+Was working on the platform logic of the code, had to write custom simulation function because frame skip was 5 and it was causing physics issue(velocity zero for 5 frames). 
+I couldn't include the platform in the action space as training is already done.
