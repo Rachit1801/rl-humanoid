@@ -3,7 +3,7 @@ import numpy as np
 from gymnasium.envs.mujoco import MujocoEnv
 from gymnasium.spaces import Box
 
-from envs.g1_config import *
+from envs.g1_config_push import *
 
 class G1Env(MujocoEnv):
 
@@ -15,6 +15,7 @@ class G1Env(MujocoEnv):
         super().__init__(model_path=MODEL_PATH, frame_skip=5, observation_space=observation_space, render_mode=render_mode)
         self.action_space = Box(low=-1.0, high=1.0, shape=(29,), dtype=np.float32)
         self._step_count = 0
+        self._push_body_id = self.model.body("pelvis").id  # or "torso_link"
 
     def _get_obs(self):
 
@@ -33,6 +34,8 @@ class G1Env(MujocoEnv):
        
     def reset_model(self):
 
+        self.data.xfrc_applied[:] = 0.0
+
         qpos = np.zeros(self.model.nq)
         qpos[2] = STANDING_HEIGHT       # z
         qpos[3] = 1.0                   # quaternion w
@@ -45,11 +48,40 @@ class G1Env(MujocoEnv):
         self.set_state(qpos, qvel)
         self._step_count = 0
 
+        self._push_countdown = self.np_random.integers(PUSH_INTERVAL_MIN, PUSH_INTERVAL_MAX + 1)
+        self._push_remaining = 0
+        self._grace_remaining = 0
+        self._push_force = np.zeros(3, dtype=np.float64)
         return self._get_obs()
+
+    def _apply_push(self):      # Call every step BEFORE do_simulation
+        if self._push_remaining > 0:
+            self._push_remaining -= 1
+            if self._push_remaining == 0:
+                # Push ended: clear force, start grace window, schedule next push
+                self.data.xfrc_applied[self._push_body_id, :3] = 0.0
+                self._push_force = np.zeros(3, dtype=np.float64)
+                self._grace_remaining = PUSH_GRACE
+                self._push_countdown = self.np_random.integers(PUSH_INTERVAL_MIN, PUSH_INTERVAL_MAX + 1)
+            return
+
+        if self._grace_remaining > 0:
+            self._grace_remaining -= 1
+
+        self._push_countdown -= 1
+        if self._push_countdown <= 0:
+            # Start a new push
+            angle = self.np_random.uniform(0.0, 2.0 * np.pi)
+            mag   = self.np_random.uniform(PUSH_FORCE_MIN, PUSH_FORCE_MAX)
+            self._push_force = np.array([mag * np.cos(angle), mag * np.sin(angle), 0.0])
+            self.data.xfrc_applied[self._push_body_id, :3] = self._push_force
+            self._push_remaining = PUSH_DURATION
+            print(f"  [PUSH] step={self._step_count}  mag={mag:.1f}N  angle={np.degrees(angle):.0f}°  fx={self._push_force[0]:.1f}  fy={self._push_force[1]:.1f}")
 
     def step(self, action):
 
         self._step_count += 1
+        self._apply_push()
         target_q = STANDING_POSE + ACTION_SCALE * action
 
         q = self.data.qpos[7:]      # joint positions
@@ -76,11 +108,11 @@ class G1Env(MujocoEnv):
         com_drift_penalty = PENALTY_COM_DRIFT * float(self.data.qpos[0] ** 2 + self.data.qpos[1] ** 2)
         base_angvel_penalty = PENALTY_BASE_ANGVEL * float(np.sum(self.data.qvel[3:6] ** 2))
 
-        # is_disturbed = (self._push_remaining > 0) or (self._grace_remaining > 0)
-        # if is_disturbed:
-        #     posture_penalty *= PUSH_PENALTY_SCALE
-        #     com_drift_penalty *= PUSH_PENALTY_SCALE
-        #     base_angvel_penalty *= PUSH_PENALTY_SCALE
+        is_disturbed = (self._push_remaining > 0) or (self._grace_remaining > 0)
+        if is_disturbed:
+            posture_penalty *= PUSH_PENALTY_SCALE
+            com_drift_penalty *= PUSH_PENALTY_SCALE
+            base_angvel_penalty *= PUSH_PENALTY_SCALE
 
         reward = REWARD_ALIVE + height_reward + upright_reward + energy + vel_penalty + action_penalty + posture_penalty + com_drift_penalty + base_angvel_penalty
 

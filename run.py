@@ -1,7 +1,7 @@
 from time import sleep
 from stable_baselines3 import PPO
 from stable_baselines3.common.vec_env import DummyVecEnv, VecNormalize
-from envs.g1_env import G1Env
+from envs.g1_env_push import G1Env
 
 # env = G1Env(render_mode="human")
 env = DummyVecEnv([lambda: G1Env(render_mode="human")])

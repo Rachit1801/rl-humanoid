@@ -1,7 +1,7 @@
 import numpy as np 
 import os
 
-MODEL_PATH = os.path.join(os.path.dirname(__file__),"..","assets","platform_29dof.xml")
+MODEL_PATH = os.path.join(os.path.dirname(__file__),"..","assets","scene_29dof.xml")
 
 """
 Variable Structure
