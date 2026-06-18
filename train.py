@@ -16,10 +16,9 @@ if __name__ == "__main__":      #Windows Guard(only needed in Windows)
     # train_env = MyCartPoleEnv(render_mode=None)       # For Single Training
     train_env = VecMonitor(train_env)   # tracks episode rewards & lengths
     # train_env = VecNormalize(train_env,norm_obs=True,norm_reward=True,clip_obs=10.0,clip_reward=10.0,gamma=0.99,)
-
     # model = PPO(policy="MlpPolicy", env=train_env, learning_rate=3e-4, n_steps=2048, batch_size=512, n_epochs=10, gamma=0.99, verbose=1, policy_kwargs=dict(net_arch=[256, 256]), tensorboard_log = "./tb_logs/")
 
-    checkpoint_callback = CheckpointCallback(save_freq=max(50_000 // 8, 1),save_path="models/checkpoints",name_prefix="g1_stand_force",save_vecnormalize=True,verbose=1,)
+    checkpoint_callback = CheckpointCallback(save_freq=max(50_000 // 8, 1),save_path="models/checkpoints",name_prefix="checkpoint",save_vecnormalize=True,verbose=1,)
 
     callbacks = CallbackList([checkpoint_callback])
 
@@ -31,8 +30,8 @@ if __name__ == "__main__":      #Windows Guard(only needed in Windows)
 
     print("\nStarting PPO training...")
     model.learn(total_timesteps=2_000_000,callback=callbacks, progress_bar=True)
-    model.save("models/g1_stand_force_3")
-    train_env.save("models/g1_stand_force_vecnorm_3.pkl")
+    model.save("models/g1_platfrom_v_1")
+    train_env.save("models/g1_platform_norm_v_1.pkl")
     print("\nTraining Complete")
     train_env.close()
 

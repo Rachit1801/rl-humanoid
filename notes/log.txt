@@ -18,3 +18,7 @@ Standing pos was above so it was falling every time
 15:25 17-06-2026
 Was working on the platform logic of the code, had to write custom simulation function because frame skip was 5 and it was causing physics issue(velocity zero for 5 frames). 
 I couldn't include the platform in the action space as training is already done.
+12:00 18-06-2026
+It still is sliding :_)
+22:46 18-06-2026
+understood... from first step the robot is still and platform is moving so its creating so much acceleration on robot for curriculum learning
