@@ -22,3 +22,6 @@ I couldn't include the platform in the action space as training is already done.
 It still is sliding :_)
 22:46 18-06-2026
 understood... from first step the robot is still and platform is moving so its creating so much acceleration on robot for curriculum learning
+
+00:34 19-06-2026
+Added SSH Key
