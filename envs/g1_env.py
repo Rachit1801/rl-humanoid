@@ -45,7 +45,7 @@ class G1Env(MujocoEnv):
         self.set_state(qpos, qvel)
         self._step_count = 0
         self.platform_vel = np.zeros(2, dtype=np.float64)
-        self.target_vel = np.array([self.np_random.uniform(-0.08, 0.08), 0.0])
+        self.target_vel = np.array([self.np_random.uniform(-0.3, 0.3), 0.0])
 
         return self._get_obs()
 
