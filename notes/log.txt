@@ -25,3 +25,5 @@ understood... from first step the robot is still and platform is moving so its c
 
 00:34 19-06-2026
 Added SSH Key
+11:28 23-06-2026
+I litrally trained the model for 30M steps overnight just for the mean_episode length of 50 :_(
