@@ -18,12 +18,12 @@
     <body name="platform" pos="0 0 -0.05">
       <joint name="platform_x" type="slide" axis="1 0 0" limited="false" damping="50"/>
       <joint name="platform_y" type="slide" axis="0 1 0" limited="false" damping="50"/>
-      <geom name="platform" type="box" size="1 1 0.05" mass="1000" rgba="0.2 0.3 0.4 1"/>
+      <geom name="platform" type="box" size="3 3 0.05" mass="10000" rgba="0.2 0.3 0.4 1"/>
     </body>
   </worldbody>
   <actuator>
-    <velocity name="platform_x_vel" joint="platform_x" kv="50000"/>
-    <velocity name="platform_y_vel" joint="platform_y" kv="50000"/>
+    <velocity name="platform_x_vel" joint="platform_x" kv="500000"/>
+    <velocity name="platform_y_vel" joint="platform_y" kv="500000"/>
   </actuator>
 </mujoco>
 
