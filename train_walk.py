@@ -8,6 +8,7 @@ level based on episode survival, similar to the official terrain_levels_vel().
 Network architecture follows the official rl_cfg.py: (512, 256, 128) with ELU.
 """
 
+import argparse
 import torch
 from stable_baselines3 import PPO
 from stable_baselines3.common.env_checker import check_env
@@ -91,6 +92,11 @@ class CurriculumLoggerCallback(BaseCallback):
 NUM_ENVS = 8
 
 if __name__ == "__main__":
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--resume", action="store_true", help="Resume training")
+    parser.add_argument("--resume_version", type=str, default="4", help="Version to resume from")
+    parser.add_argument("--version", type=str, default="5", help="Version to save as")
+    args = parser.parse_args()
 
     # ── Sanity check ────────────────────────────────────────────────────
     print("Running env check ...")
@@ -100,43 +106,59 @@ if __name__ == "__main__":
     # ── Vectorised environment ──────────────────────────────────────────
     train_env = SubprocVecEnv([make_env(i) for i in range(NUM_ENVS)])
     train_env = VecMonitor(train_env)
-    train_env = VecNormalize(
-        train_env,
-        norm_obs=True,
-        norm_reward=True,
-        clip_obs=10.0,
-        clip_reward=10.0,
-        gamma=0.99,
-    )
+    
+    if args.resume:
+        print(f"Resuming from models/g1_walk_norm_v{args.resume_version}.pkl ...")
+        train_env = VecNormalize.load(f"models/g1_walk_norm_v{args.resume_version}.pkl", train_env)
+        train_env.training = True
+        train_env.norm_reward = False
+    else:
+        train_env = VecNormalize(
+            train_env,
+            norm_obs=True,
+            norm_reward=False,
+            clip_obs=10.0,
+            clip_reward=100.0,
+            gamma=0.99,
+        )
 
     # ── PPO model ───────────────────────────────────────────────────────
     # Architecture: (512, 256, 128) ELU  — from official rl_cfg.py
-    model = PPO(
-        policy=AsymmetricPolicy,
-        env=train_env,
-        learning_rate=3e-4,
-        n_steps=2048,
-        batch_size=512,
-        n_epochs=5,                          # official: 5
-        gamma=0.99,
-        gae_lambda=0.95,
-        clip_range=0.2,
-        ent_coef=0.01,                       # official: 0.01
-        max_grad_norm=1.0,                   # official: 1.0
-        verbose=1,
-        policy_kwargs=dict(
-            net_arch=[512, 256, 128],
-            activation_fn=torch.nn.ELU,
-            share_features_extractor=False,
-        ),
-        tensorboard_log="./tb_logs/",
-    )
+    if args.resume:
+        print(f"Resuming from models/g1_walk_v{args.resume_version}.zip ...")
+        model = PPO.load(
+            f"models/g1_walk_v{args.resume_version}.zip",
+            env=train_env,
+            tensorboard_log="./tb_logs/",
+            # Reset learning rate to give it a fresh start if needed, but usually we just keep it
+        )
+    else:
+        model = PPO(
+            policy=AsymmetricPolicy,
+            env=train_env,
+            learning_rate=3e-4,
+            n_steps=2048,
+            batch_size=512,
+            n_epochs=5,                          # official: 5
+            gamma=0.99,
+            gae_lambda=0.95,
+            clip_range=0.2,
+            ent_coef=0.0,                        # official: 0.01
+            max_grad_norm=1.0,                   # official: 1.0
+            verbose=1,
+            policy_kwargs=dict(
+                net_arch=[512, 256, 128],
+                activation_fn=torch.nn.ELU,
+                share_features_extractor=False,
+            ),
+            tensorboard_log="./tb_logs/",
+        )
 
     # ── Callbacks ───────────────────────────────────────────────────────
     checkpoint_cb = CheckpointCallback(
         save_freq=max(100_000 // NUM_ENVS, 1),
-        save_path="models/walk_checkpoints",
-        name_prefix="walk_ckpt",
+        save_path=f"models/walk_checkpoints_v{args.version}",
+        name_prefix=f"walk_ckpt_v{args.version}",
         save_vecnormalize=True,
         verbose=1,
     )
@@ -164,11 +186,11 @@ if __name__ == "__main__":
     )
 
     # ── Save ────────────────────────────────────────────────────────────
-    model.save("models/g1_walk_v1")
-    train_env.save("models/g1_walk_norm_v1.pkl")
+    model.save(f"models/g1_walk_v{args.version}")
+    train_env.save(f"models/g1_walk_norm_v{args.version}.pkl")
     print("\nTraining complete")
-    print("  Model        -> models/g1_walk_v1")
-    print("  VecNormalize -> models/g1_walk_norm_v1.pkl")
+    print(f"  Model        -> models/g1_walk_v{args.version}")
+    print(f"  VecNormalize -> models/g1_walk_norm_v{args.version}.pkl")
 
     train_env.close()
 

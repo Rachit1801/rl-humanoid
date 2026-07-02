@@ -26,14 +26,16 @@ from envs.g1_walk_config import (
     STANDING_HEIGHT, STANDING_POSE,
     GAIT_PERIOD, GAIT_OFFSETS, GAIT_STANCE_RATIO,
     VEL_CMD_RESAMPLE_TIME, STANDING_CMD_PROB,
-    VEL_TRACKING_SIGMA,
-    REWARD_ALIVE, REWARD_HEIGHT, REWARD_UPRIGHT,
+    VEL_TRACKING_SIGMA, ANG_VEL_TRACKING_SIGMA,
+    REWARD_ALIVE, REWARD_HEIGHT,
     REWARD_VEL_TRACKING, REWARD_GAIT, REWARD_POSTURE,
-    REWARD_STAND_STILL,
+    REWARD_ANG_VEL_TRACKING, REWARD_STAND_STILL,
     PENALTY_ENERGY, PENALTY_JOINT_VEL, PENALTY_ACTION,
     PENALTY_ACTION_RATE, PENALTY_COM_DRIFT, PENALTY_BASE_ANGVEL,
     PENALTY_FOOT_SLIP, PENALTY_TERMINATION,
-    HEIGHT_GAUSSIAN_K, MIN_HEIGHT, MIN_UPRIGHT,
+    PENALTY_BODY_ORIENTATION, PENALTY_JOINT_ACC, PENALTY_JOINT_POS_LIMITS,
+    PENALTY_FOOT_CLEARANCE, PENALTY_SOFT_LANDING,
+    HEIGHT_GAUSSIAN_K, MIN_HEIGHT, MIN_UPRIGHT, FOOT_CLEARANCE_TARGET, REWARD_CLIP,
     STD_STANDING, STD_WALKING, STD_RUNNING,
     WALKING_THRESHOLD, RUNNING_THRESHOLD,
     CURRICULUM_STAGES, NUM_CURRICULUM_STAGES,
@@ -70,6 +72,9 @@ class G1WalkEnv(MujocoEnv):
         # ── Internal state ──────────────────────────────────────────────
         self._step_count = 0
         self._last_action = np.zeros(29, dtype=np.float64)
+        self._prev_joint_vel = np.zeros(29, dtype=np.float64)
+        self._prev_foot_contact = (False, False)
+        self._prev_foot_vel_z = np.zeros(2, dtype=np.float64)  # [left_vz, right_vz]
 
         # ── Velocity command ────────────────────────────────────────────
         self._vel_command = np.zeros(3, dtype=np.float64)   # [vx, vy, yaw_rate]
@@ -142,8 +147,8 @@ class G1WalkEnv(MujocoEnv):
     def _get_obs(self):
         R = self.data.body("pelvis").xmat.reshape(3, 3)
 
-        # Body-frame angular velocity  (official: base_ang_vel)
-        body_ang_vel = R.T @ self.data.qvel[3:6]
+        # Body-frame angular velocity (qvel[3:6] is ALREADY in local frame in MuJoCo)
+        body_ang_vel = self.data.qvel[3:6].copy()
 
         # Body-frame linear velocity  (official critic: base_lin_vel)
         body_lin_vel = R.T @ self.data.qvel[0:3]
@@ -381,6 +386,9 @@ class G1WalkEnv(MujocoEnv):
 
         self._step_count = 0
         self._last_action[:] = 0.0
+        self._prev_joint_vel[:] = 0.0
+        self._prev_foot_contact = (False, False)
+        self._prev_foot_vel_z[:] = 0.0
         self._episode_reward_accum = 0.0
         self._platform_vel[:] = 0.0
         self._platform_target_vel[:] = 0.0
@@ -444,10 +452,7 @@ class G1WalkEnv(MujocoEnv):
             -HEIGHT_GAUSSIAN_K * (height - STANDING_HEIGHT) ** 2
         )
 
-        # 3  Upright
-        r_upright = REWARD_UPRIGHT * max(0.0, upright)
-
-        # 4  Velocity tracking  (official: track_linear_velocity)
+        # 3  Velocity tracking  (official: track_linear_velocity)
         #    Track velocity relative to platform, in body frame.
         body_lin_vel    = R.T @ self.data.qvel[0:3]
         pvel_world      = np.array([self.data.qvel[35], self.data.qvel[36], 0.0])
@@ -457,6 +462,14 @@ class G1WalkEnv(MujocoEnv):
         z_err  = float(relative_vel[2] ** 2)
         r_vel_track = REWARD_VEL_TRACKING * np.exp(
             -(xy_err + 2.0 * z_err) / VEL_TRACKING_SIGMA
+        )
+
+        # 4  Angular velocity tracking
+        base_ang_vel = self.data.qvel[3:6].copy()
+        z_err_ang = float((self._vel_command[2] - base_ang_vel[2]) ** 2)
+        xy_err_ang = float(np.sum(base_ang_vel[:2] ** 2))
+        r_ang_vel_track = REWARD_ANG_VEL_TRACKING * np.exp(
+            -(z_err_ang + 0.05 * xy_err_ang) / ANG_VEL_TRACKING_SIGMA
         )
 
         # 5  Gait  (official: feet_gait — only when moving)
@@ -476,38 +489,91 @@ class G1WalkEnv(MujocoEnv):
 
         # ── negative penalties ──────────────────────────────────────────
 
-        # 7  Energy  (pre-sim torque × pre-sim velocity)
+        # 7  Body orientation L2 (official replacement for upright)
+        projected_gravity = R.T @ np.array([0.0, 0.0, -1.0])
+        p_body_orientation = PENALTY_BODY_ORIENTATION * float(np.sum(projected_gravity[:2] ** 2))
+
+        # 8  Energy  (pre-sim torque × pre-sim velocity)
         p_energy = PENALTY_ENERGY * float(np.sum(np.abs(torque * qd)))
 
-        # 8  Joint velocity
+        # 9  Joint velocity
         p_jvel = PENALTY_JOINT_VEL * float(np.sum(qd ** 2))
 
-        # 9  Action magnitude
+        # 10 Action magnitude
         p_action = PENALTY_ACTION * float(np.sum(action ** 2))
 
-        # 10 Action rate  (official: action_rate_l2)
+        # 11 Action rate  (official: action_rate_l2)
         p_action_rate = PENALTY_ACTION_RATE * float(
             np.sum((self._last_action - prev_action) ** 2)
         )
 
-        # 11 COM drift relative to platform  (your existing design)
+        # 12 Joint acceleration
+        p_joint_acc = PENALTY_JOINT_ACC * float(
+            np.sum(((self.data.qvel[6:35] - self._prev_joint_vel) / self.dt) ** 2)
+        )
+
+        # 13 Joint position limits
+        # q_now is indices 7:36. Actuated joint ranges are in model.jnt_range[1:30]
+        q_lower = self.model.jnt_range[1:30, 0]
+        q_upper = self.model.jnt_range[1:30, 1]
+        out_of_limits = np.maximum(0.0, q_now - q_upper) + np.maximum(0.0, q_lower - q_now)
+        p_joint_limits = PENALTY_JOINT_POS_LIMITS * float(np.sum(out_of_limits))
+
+        # 14 COM drift relative to platform
         pelvis_xy   = self.data.body("pelvis").xpos[:2]
         platform_xy = self.data.body("platform").xpos[:2]
         drift       = pelvis_xy - platform_xy
         p_com_drift = PENALTY_COM_DRIFT * float(np.sum(drift ** 2))
 
-        # 12 Base angular velocity  (official: body_ang_vel — XY only, exclude Z/yaw)
+        # 15 Base angular velocity
         p_base_angvel = PENALTY_BASE_ANGVEL * float(
             np.sum(self.data.qvel[3:5] ** 2)
         )
 
-        # 13 Foot slip  (official: feet_slip — only when moving)
+        # 16 Foot slip & Foot clearance & Soft landing
+        left_contact, right_contact = self._detect_foot_contacts()
+        
         p_foot_slip = (
             PENALTY_FOOT_SLIP * self._compute_foot_slip()
             if total_speed > 0.1 else 0.0
         )
 
-        # 14 Stand still  (official: stand_still — only when standing)
+        left_id  = self.model.body("left_ankle_roll_link").id
+        right_id = self.model.body("right_ankle_roll_link").id
+        # Foot height relative to platform surface (platform top = platform_z + 0.05)
+        platform_surface_z = self.data.body("platform").xpos[2] + 0.05
+        left_z  = self.data.body("left_ankle_roll_link").xpos[2] - platform_surface_z
+        right_z = self.data.body("right_ankle_roll_link").xpos[2] - platform_surface_z
+        
+        p_foot_clearance = 0.0
+        p_soft_landing = 0.0
+
+        if total_speed > 0.1:
+            left_vel = np.zeros(6)
+            right_vel = np.zeros(6)
+            mujoco.mj_objectVelocity(self.model, self.data, mujoco.mjtObj.mjOBJ_XBODY, left_id, left_vel, 0)
+            mujoco.mj_objectVelocity(self.model, self.data, mujoco.mjtObj.mjOBJ_XBODY, right_id, right_vel, 0)
+            
+            left_speed = float(np.linalg.norm(left_vel[3:5]))
+            right_speed = float(np.linalg.norm(right_vel[3:5]))
+
+            # Official: delta = |foot_z - target|, cost = delta * vel_norm
+            if not left_contact:
+                p_foot_clearance += float(abs(left_z - FOOT_CLEARANCE_TARGET) * left_speed)
+            if not right_contact:
+                p_foot_clearance += float(abs(right_z - FOOT_CLEARANCE_TARGET) * right_speed)
+                
+            # Soft landing: use *previous* step vertical velocity (pre-collision)
+            # Post-collision velocity is near-zero because MuJoCo resolves the contact
+            if left_contact and not self._prev_foot_contact[0]:
+                p_soft_landing += float(abs(self._prev_foot_vel_z[0]))
+            if right_contact and not self._prev_foot_contact[1]:
+                p_soft_landing += float(abs(self._prev_foot_vel_z[1]))
+                
+        p_foot_clearance *= PENALTY_FOOT_CLEARANCE
+        p_soft_landing *= PENALTY_SOFT_LANDING
+
+        # 17 Stand still
         p_stand_still = (
             REWARD_STAND_STILL * float(np.sum((q_now - STANDING_POSE) ** 2))
             if total_speed <= 0.1 else 0.0
@@ -515,10 +581,23 @@ class G1WalkEnv(MujocoEnv):
 
         # ── total ───────────────────────────────────────────────────────
         reward = (
-            r_alive + r_height + r_upright + r_vel_track + r_gait + r_posture
-            + p_energy + p_jvel + p_action + p_action_rate
-            + p_com_drift + p_base_angvel + p_foot_slip + p_stand_still
+            r_alive + r_height + r_vel_track + r_ang_vel_track + r_gait + r_posture
+            + p_body_orientation + p_energy + p_jvel + p_action + p_action_rate
+            + p_joint_acc + p_joint_limits + p_com_drift + p_base_angvel
+            + p_foot_slip + p_foot_clearance + p_soft_landing + p_stand_still
         )
+        reward = np.clip(reward, -REWARD_CLIP, REWARD_CLIP)
+
+        # Update previous states
+        self._prev_joint_vel = self.data.qvel[6:35].copy()
+        self._prev_foot_contact = (left_contact, right_contact)
+        # Store current foot vertical velocities for next step's soft landing
+        left_vel_now = np.zeros(6)
+        right_vel_now = np.zeros(6)
+        mujoco.mj_objectVelocity(self.model, self.data, mujoco.mjtObj.mjOBJ_XBODY, left_id, left_vel_now, 0)
+        mujoco.mj_objectVelocity(self.model, self.data, mujoco.mjtObj.mjOBJ_XBODY, right_id, right_vel_now, 0)
+        self._prev_foot_vel_z[0] = left_vel_now[5]
+        self._prev_foot_vel_z[1] = right_vel_now[5]
 
         # ── termination  (official: bad_orientation at 70°) ─────────────
         terminated = bool(height < MIN_HEIGHT or upright < MIN_UPRIGHT)

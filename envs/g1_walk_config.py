@@ -131,10 +131,11 @@ VEL_TRACKING_SIGMA = 0.25    # = std²; official passes std=sqrt(0.25) and divid
 # env because they provide a strong learning signal for SB3 PPO; the official
 # RSL-RL pipeline doesn't need them due to different reward normalisation.
 # ═══════════════════════════════════════════════════════════════════════════════
-REWARD_ALIVE         =  1.0       # per-step survival bonus
+REWARD_ALIVE         =  0.25      # per-step survival bonus (reduced to prevent exploitation)
 REWARD_HEIGHT        =  2.0       # Gaussian  exp(-K*(h-h0)^2)
-REWARD_UPRIGHT       =  1.5       # pelvis z-axis alignment with world z
 REWARD_VEL_TRACKING  =  3.0       # exp velocity tracking  (official weight 1.0, boosted for SB3)
+REWARD_ANG_VEL_TRACKING = 1.0     # track yaw rate command
+ANG_VEL_TRACKING_SIGMA = 0.5      # std² = 0.5
 REWARD_GAIT          =  1.5       # phase-matched foot contacts  (official 0.5)
 REWARD_POSTURE       =  1.0       # exp variable posture  (official 1.0)
 
@@ -145,11 +146,18 @@ PENALTY_ACTION_RATE  = -0.05      # (a − a_prev)²   (official −0.05)
 PENALTY_COM_DRIFT    = -0.5       # xy drift from platform centre
 PENALTY_BASE_ANGVEL  = -0.05      # base angular velocity²  (official −0.05)
 PENALTY_FOOT_SLIP    = -0.25      # foot xy vel² when in contact  (official −0.25)
+PENALTY_BODY_ORIENTATION = -1.0   # projected gravity xy²  (official −1.0)
+PENALTY_JOINT_ACC    = -2.5e-7    # joint_acc²
+PENALTY_JOINT_POS_LIMITS = -10.0  # penalise nearing joint limits
+PENALTY_FOOT_CLEARANCE = -1.0     # wrong foot height during swing
+PENALTY_SOFT_LANDING = -1e-3      # impact force penalty
 PENALTY_TERMINATION  = -50.0      # one-time cost for falling
 
 REWARD_STAND_STILL   = -1.0       # joint deviation² when standing  (official −1.0)
 
 HEIGHT_GAUSSIAN_K    = 40.0       # sharpness of height Gaussian
+FOOT_CLEARANCE_TARGET = 0.10      # official target swing height
+REWARD_CLIP          = 10.0       # clip per-step reward to prevent extreme values
 
 # ═══════════════════════════════════════════════════════════════════════════════
 # Variable posture standard deviations  (from official env_cfgs.py)
@@ -212,8 +220,8 @@ MIN_UPRIGHT = 0.3      # cos(tilt) below this → terminated  (~72°, official u
 #   3. Episode length
 # ═══════════════════════════════════════════════════════════════════════════════
 CURRICULUM_STAGES = {
-    0: {  # Stand & balance on gently moving platform
-        "vel_x_range":        (0.0, 0.0),
+    0: {  # Balance + slow walking on gently moving platform
+        "vel_x_range":        (0.0, 0.2),
         "platform_vel_max":   0.1,
         "platform_accel_max": 0.1,
         "max_episode_steps":  1000,       # 10 s

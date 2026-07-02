@@ -47,3 +47,12 @@ model = PPO(policy="MlpPolicy", env=train_env, ...)
 model = PPO.load("models/g1_stand_retry", env=train_env)
 ```
 
+---
+
+​	**Why is `train/std` still exploding after the reward changes?**
+
+If your analysis is correct, then after removing the "free rewards", you'd expect Reward scale Std 55000 -> 30000 -> 10000 but instead you got 55000 -> 11,700,000. So either:
+
+1. **The fixes weren't enough** to make the reward sensitive to action quality.
+2. **There's another bug** causing the policy to keep increasing exploration.
+3. **The checkpoint is already in a bad optimization basin** where PPO keeps pushing `log_std` upward.

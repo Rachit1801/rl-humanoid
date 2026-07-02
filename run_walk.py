@@ -18,7 +18,7 @@ from envs.g1_walk_env import G1WalkEnv
 
 # ── Environment ─────────────────────────────────────────────────────────
 env = DummyVecEnv([lambda: G1WalkEnv(render_mode="human")])
-env = VecNormalize.load("models/g1_walk_norm_v1.pkl", env)
+env = VecNormalize.load("models/g1_walk_norm_v4.pkl", env)
 env.training = False
 env.norm_reward = False
 
@@ -26,7 +26,7 @@ env.norm_reward = False
 env.env_method("set_curriculum_stage", 0)
 
 # ── Model ───────────────────────────────────────────────────────────────
-model = PPO.load("models/g1_walk_v1")
+model = PPO.load("models/g1_walk_v4")
 
 # ── Run ─────────────────────────────────────────────────────────────────
 obs = env.reset()
@@ -40,10 +40,10 @@ for step in range(4000):
         print(f"Episode ended at step {step}. Resetting...")
         obs = env.reset()
 
-    # Camera tracking on pelvis
-    if step == 0:
-        viewer = env.envs[0].unwrapped.mujoco_renderer.viewer
-        viewer.cam.type = mujoco.mjtCamera.mjCAMERA_TRACKING
-        viewer.cam.trackbodyid = env.envs[0].model.body("pelvis").id
+    # # Camera tracking on pelvis
+    # if step == 0:
+    #     viewer = env.envs[0].unwrapped.mujoco_renderer.viewer
+    #     viewer.cam.type = mujoco.mjtCamera.mjCAMERA_TRACKING
+    #     viewer.cam.trackbodyid = env.envs[0].model.body("pelvis").id
 
 env.close()
