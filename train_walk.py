@@ -21,15 +21,20 @@ from stable_baselines3.common.callbacks import (
 from stable_baselines3.common.policies import ActorCriticPolicy
 
 from envs.g1_walk_env import G1WalkEnv, make_env
-from envs.g1_walk_config import TOTAL_TIMESTEPS, NUM_CURRICULUM_STAGES
+from envs.g1_walk_config import TOTAL_TIMESTEPS, NUM_CURRICULUM_STAGES, ACTOR_OBS_DIM
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
 # Asymmetric Actor-Critic Policy
 #
-# Hides the platform_vel (last 2 dimensions of observation) from the Actor,
-# but provides it to the Critic to reduce variance during training.
+# The observation is a flat 115D array:
+#   indices 0:98   = actor features (ang_vel, gravity, cmd, phase, joint_pos/vel, last_action)
+#   indices 98:115 = critic-only features (lin_vel, platform_vel, foot_height/air/contact/forces)
+#
+# The actor sees zeros for indices 98:, the critic sees everything.
 # ═══════════════════════════════════════════════════════════════════════════════
+
+_CRITIC_START = ACTOR_OBS_DIM  # = 98
 
 class AsymmetricPolicy(ActorCriticPolicy):
     def extract_features(self, obs, features_extractor=None):
@@ -38,15 +43,15 @@ class AsymmetricPolicy(ActorCriticPolicy):
         # When share_features_extractor=False, SB3 returns a tuple (pi_features, vf_features)
         if isinstance(features, tuple):
             pi_features, vf_features = features
-            # Hide platform velocity (last 2 dims) from the Actor
+            # Hide critic-only features (last 17 dims) from the Actor
             masked_pi = pi_features.clone()
-            masked_pi[:, -2:] = 0.0
+            masked_pi[:, _CRITIC_START:] = 0.0
             return masked_pi, vf_features
         
         # Fallback for share_features_extractor=True
         if features_extractor is self.pi_features_extractor or features_extractor is None:
             masked = features.clone()
-            masked[:, -2:] = 0.0
+            masked[:, _CRITIC_START:] = 0.0
             return masked
             
         return features
@@ -55,9 +60,8 @@ class AsymmetricPolicy(ActorCriticPolicy):
 # ═══════════════════════════════════════════════════════════════════════════════
 # Curriculum Logger callback
 #
-# The curriculum is now driven internally by each environment (promote on
-# survival, demote on early falls). This callback simply logs the per-env
-# levels periodically so you can track progress.
+# The curriculum is step-based: velocity ranges expand after
+# CURRICULUM_VEL_EXPAND_STEP total steps. This callback logs progress.
 # ═══════════════════════════════════════════════════════════════════════════════
 
 class CurriculumLoggerCallback(BaseCallback):
@@ -172,11 +176,12 @@ if __name__ == "__main__":
 
     # ── Train ───────────────────────────────────────────────────────────
     print(f"Starting walking training  ({TOTAL_TIMESTEPS:,} timesteps)")
-    print(f"  Curriculum      : ADAPTIVE (per-env promote/demote)")
+    print(f"  Curriculum      : Step-based velocity expansion")
     print(f"  Stages          : {NUM_CURRICULUM_STAGES}")
     print(f"  Parallel envs   : {NUM_ENVS}")
+    print(f"  Obs dims        : 115 (actor=98, critic-only=17)")
     print(f"  Network         : [512, 256, 128] ELU")
-    print(f"  Actor-Critic    : Asymmetric (platform vel hidden from Actor)\n")
+    print(f"  Actor-Critic    : Asymmetric (critic-only: lin_vel, platform, foot info)\n")
 
     model.learn(
         total_timesteps=TOTAL_TIMESTEPS,
